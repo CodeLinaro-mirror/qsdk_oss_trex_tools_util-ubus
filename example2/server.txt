@@ -1,0 +1,9 @@
+test_object
+	name = test
+	method = hello/watch/count
+	parm = id (int32)/msg(str)
+
+test_event (subscriber)
+	cb = test_notify
+	remove_cb = test_handle_remove
+	subscribe_id = (event broadcast sent by client)
