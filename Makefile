@@ -1,5 +1,9 @@
+
 STAGING_DIR=$(HOME)/openwrt/staging_dir
-#STAGING_DIR=$(HOME)/openwrt_source/openwrt/staging_dir
+
+ifeq ($(wildcard $(STAGING_DIR)/.*),)
+STAGING_DIR=$(HOME)/openwrt_source/openwrt/staging_dir
+endif
 
 export STAGING_DIR
 
