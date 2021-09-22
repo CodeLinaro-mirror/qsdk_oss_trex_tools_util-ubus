@@ -1,4 +1,6 @@
-STAGING_DIR=/home/kevin_tung/openwrt/staging_dir
+STAGING_DIR=$(HOME)/openwrt/staging_dir
+#STAGING_DIR=$(HOME)/openwrt_source/openwrt/staging_dir
+
 export STAGING_DIR
 
 CC=$(STAGING_DIR)/toolchain-x86_64_gcc-8.4.0_musl/bin/x86_64-openwrt-linux-musl-gcc

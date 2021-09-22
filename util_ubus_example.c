@@ -28,9 +28,19 @@ main(int argc, char *argv[])
 	// uci get single value from section server
 	ret = util_ubus_uci_get("ucitest", "ntp", "server", value, 129);
 	dbprintf("ret=%d(%s), value=%s\n\n", ret, util_ubus_error_str(ret), value);
+
+	// uci get single value from exist section and with option NULL
+	ret = util_ubus_uci_get("ucitest", "@system[0]", NULL, value, 129);
+	dbprintf("ret=%d(%s), value=%s\n\n", ret, util_ubus_error_str(ret), value);
+
+	// uci get single value from none exist section and with option NULL
+	ret = util_ubus_uci_get("ucitest", "@system[2]", NULL, value, 129);
+	dbprintf("ret=%d(%s), value=%s\n\n", ret, util_ubus_error_str(ret), value);
+
 	// uci get single value from unamed section
 	ret = util_ubus_uci_get("ucitest", "@system[0]", "hostname", value, 129);
 	dbprintf("ret=%d(%s), value=%s\n\n", ret, util_ubus_error_str(ret), value);
+
 	ret = util_ubus_uci_get("ucitest", "@system[0]", "cronloglevel", value, 129);
 	dbprintf("ret=%d(%s), value=%s\n\n", ret, util_ubus_error_str(ret), value);
 

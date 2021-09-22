@@ -376,6 +376,73 @@ util_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 				}
 			}
 				
+		} else if (type == BLOBMSG_TYPE_TABLE) {
+			//section
+			struct blob_attr *_cur;
+			int _rem;
+
+			blobmsg_for_each_attr(_cur, cur, _rem) {
+				unsigned int _type = blob_id(_cur);
+				const struct blobmsg_hdr *hdr;
+
+				//maybe useful in some case
+				//if (!blob_is_extended(attr))
+				//continue;
+
+				/*
+					if the section is exist, we can find option like ".name": "cfg03f65c"
+				*/
+				hdr = blob_data(_cur);
+				if (_type == BLOBMSG_TYPE_STRING) {
+					int len;
+
+					if (util_ubus_debug)
+						dbprintf("type=%u(%s) name=%s\n", type, util_ubus_blogmsg_type_str(_type), (char *) hdr->name);
+
+					if ((value = blobmsg_get_string(_cur)) == NULL) {
+						priv->ret = UTIL_UBUS_ERROR_BLOB_ATTR_PARSE;
+						continue;
+					}
+
+					//only keep .name's value???
+					if (memcmp(hdr->name, ".name", 5) != 0) {
+						continue;
+					}
+
+					if ((len = strlen(priv->value)) >0) {
+						if (priv->value_size-1-len <= 2) {
+							priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
+							return;
+						}
+						strncat(priv->value, ", " , priv->value_size-1-len);
+						len+=2;
+					}
+					if (priv->value_size-1-len < strlen(value)) {
+						priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
+						return;
+					}
+					strncat(priv->value, value, priv->value_size-1-len);
+					found++;
+
+				} else if (_type == BLOBMSG_TYPE_INT64 || _type == BLOBMSG_TYPE_INT32 ||
+					_type == BLOBMSG_TYPE_INT16 || _type == BLOBMSG_TYPE_INT8) {
+					if (util_ubus_debug)
+						dbprintf("type=%u(%s)\n", type, util_ubus_blogmsg_type_str(_type));
+
+				} else if (_type == BLOBMSG_TYPE_BOOL || _type == BLOBMSG_TYPE_DOUBLE) {
+					if (util_ubus_debug)
+						dbprintf("type=%u(%s)\n", type, util_ubus_blogmsg_type_str(_type));
+
+				} else if (_type == BLOBMSG_TYPE_ARRAY) {
+					if (util_ubus_debug)
+						dbprintf("type=%u(%s)\n", type, util_ubus_blogmsg_type_str(_type));
+
+				} else {
+					if (util_ubus_debug)
+						dbprintf("2nd layer: unsupported  blobmsg_type %u(%s)\n", _type, util_ubus_blogmsg_type_str(_type));
+					priv->ret = UTIL_UBUS_ERROR_BLOB_MSG_TYPE_UNSUPPORTED;
+				}
+			}
 		} else {
 			if (util_ubus_debug)
 				dbprintf("1st layer: unsupported blobmsg_type %u(%s)\n", type, util_ubus_blogmsg_type_str(type));
@@ -397,7 +464,7 @@ util_ubus_uci_get(char *config, char *section, char *option, char *value, unsign
 	int ret;
 	struct util_ubus_uci_get_priv_t priv = { .value_size = value_size, .value = value, .ret = UTIL_UBUS_ERROR_ENTRY_NOT_FOUND };
 
-	if (!config || !section || !option || !value)
+	if (!config || !section || !value)
 		return UTIL_UBUS_ERROR_NULL_POINTER;
 
 	memset(&b, 0, sizeof(b));	// must! or blob_buf_init would segfault
@@ -406,7 +473,8 @@ util_ubus_uci_get(char *config, char *section, char *option, char *value, unsign
 	// prepare parameter
 	blobmsg_add_string(&b, "config",  config);
 	blobmsg_add_string(&b, "section",  section);
-	blobmsg_add_string(&b, "option",  option);
+	if(option)
+		blobmsg_add_string(&b, "option",  option);
 	blobmsg_add_string(&b, "ubus_rpc_session",  rpc_session_id);
 
 	// check if path 'session' is registered on ubusd
