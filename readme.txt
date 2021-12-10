@@ -176,3 +176,44 @@ util_ubus_example.c:145: main(): ret=0(ok)
 
 root@OpenWrt:~#
 
+3. test api find_parent_by_section_type and find_child_by_section_type
+
+Need /etc/section_relation.cfg and /etc/config/twireless for test(put in the directory test_sample/)
+If you need noise debug message, please modify below parameter to 2
+#define UTIL_UBUS_DEBUG_DEFAULT		1
+
+
+//test find_parent_by_section_type
+util_ubus_example.c:187: main(): index=0
+
+util_ubus_example.c:190: main(): ret=0(ok), value=wave513
+
+util_ubus_example.c:197: main(): index=1
+
+util_ubus_example.c:200: main(): ret=0(ok), value=wave523
+
+// error case
+util_ubus.c:1130: find_parent_by_section_type(): ret=-1101(can_not_find_related_key_name)
+
+util_ubus_example.c:209: main(): ret=-1101(can_not_find_related_key_name)
+
+// test find_child_by_section_type
+util_ubus.c:502: util_ubus_uci_get(): ubus_invoke uci::get cb error -1003(entry_not_found)
+util_ubus_example.c:216: main(): ret=3, dump index[]=0 1 2
+util_ubus.c:502: util_ubus_uci_get(): ubus_invoke uci::get cb error -1003(entry_not_found)
+util_ubus_example.c:229: main(): ret=2, dump index[]=3 4
+
+// error case 1
+util_ubus.c:1212: find_child_by_section_type(): child_section_index_size=(1) is too small
+
+util_ubus_example.c:243: main(): ret=-1103, dump index[]=util_ubus_example.c:249: main(): ret=-1103(buffer_for_return_is_too_small)
+
+// error case 2
+util_ubus.c:502: util_ubus_uci_get(): ubus_invoke uci::get cb error -1003(entry_not_found)
+util_ubus_example.c:257: main(): ret=-1003, dump index[]=util_ubus_example.c:263: main(): ret=-1003(entry_not_found)
+
+// error case 3
+util_ubus.c:502: util_ubus_uci_get(): ubus_invoke uci::get cb error -1003(entry_not_found)
+util_ubus_example.c:271: main(): ret=-1102, dump index[]=util_ubus_example.c:277: main(): ret=-1102(can_not_find_related_key_value)
+
+

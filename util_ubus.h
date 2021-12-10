@@ -14,6 +14,10 @@ static inline char *util_purename(char *path) { char *delim=rindex(path, '/'); r
 #define UTIL_UBUS_DEBUG_DEFAULT		1
 #define UBUS_INVOKE_TIMEOUT_DEFAULT	30
 #define HAS_MAIN			1
+#define BUF_LINE_LEN			1024	//ex: wireless.@wifi-device   wireless.@wifi-iface    device
+#define TOKEN_LEN			256	//ex: @wifi-device
+
+#define UTIL_UBUS_OK_ENTRY_FOUND			1001
 
 #define UTIL_UBUS_ERROR_NULL_POINTER			-1001
 #define UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL		-1002
@@ -23,6 +27,12 @@ static inline char *util_purename(char *path) { char *delim=rindex(path, '/'); r
 #define UTIL_UBUS_ERROR_BLOB_ATTR_NOT_FOUND		-1006
 #define UTIL_UBUS_ERROR_BLOB_ATTR_PARSE			-1007
 #define UTIL_UBUS_ERROR_BLOB_MSG_TYPE_UNSUPPORTED	-1008
+
+#define UTIL_ERROR_CAN_NOT_FIND_RELATED_KEY_NAME	-1101
+#define UTIL_ERROR_CAN_NOT_FIND_RELATED_KEY_VALUE	-1102
+#define UTIL_ERROR_BUFFER_FOR_RETURN_IS_TOO_SMALL	-1103
+
+#define UTIL_SECTION_RELATION_CONFIGURE			"/etc/section_relation.cfg"
 
 /* util_ubus.c */
 int util_ubus_client_init(void);
@@ -43,5 +53,7 @@ int util_ubus_uci_apply(int rollback_enable, unsigned int auto_rollback_timeout)
 int util_ubus_uci_confirm(void);
 int util_ubus_uci_rollback(void);
 int util_ubus_uci_dump_changes(char *config);
+int find_parent_by_section_type(char *section_relation_file, char *child_config, char *child_section_type, int child_section_index, char *parent_config, char *parent_section_type);
+int find_child_by_section_type(char *section_relation_file, char *child_config, char *child_section_type, int *found_child_section_index, int child_section_index_size, char *parent_config, char *parent_section_type, int parent_section_index);
 
 #endif

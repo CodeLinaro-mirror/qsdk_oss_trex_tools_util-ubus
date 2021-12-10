@@ -65,6 +65,12 @@ util_ubus_error_str(int error)
 		case UTIL_UBUS_ERROR_BLOB_ATTR_NOT_FOUND:	return "blob_attr_not_found";
 		case UTIL_UBUS_ERROR_BLOB_ATTR_PARSE:		return "blob_attr_parse_error";	
 		case UTIL_UBUS_ERROR_BLOB_MSG_TYPE_UNSUPPORTED:	return "blob_msg_type_unsupported";
+
+		case UTIL_ERROR_CAN_NOT_FIND_RELATED_KEY_NAME:	return "can_not_find_related_key_name";
+		case UTIL_ERROR_CAN_NOT_FIND_RELATED_KEY_VALUE:	return "can_not_find_related_key_value";
+		case UTIL_ERROR_BUFFER_FOR_RETURN_IS_TOO_SMALL:	return "buffer_for_return_is_too_small";
+
+		case UTIL_UBUS_OK_ENTRY_FOUND:		return "entry_found";
 	}
 	return "?";
 }
@@ -375,7 +381,6 @@ util_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 					priv->ret = UTIL_UBUS_ERROR_BLOB_MSG_TYPE_UNSUPPORTED;
 				}
 			}
-				
 		} else if (type == BLOBMSG_TYPE_TABLE) {
 			//section
 			struct blob_attr *_cur;
@@ -396,7 +401,7 @@ util_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 				if (_type == BLOBMSG_TYPE_STRING) {
 					int len;
 
-					if (util_ubus_debug)
+					if (util_ubus_debug >= 3)
 						dbprintf("type=%u(%s) name=%s\n", type, util_ubus_blogmsg_type_str(_type), (char *) hdr->name);
 
 					if ((value = blobmsg_get_string(_cur)) == NULL) {
@@ -929,3 +934,295 @@ util_ubus_uci_dump_changes(char *config)
 	blob_buf_free(&b);
 	return ret;
 }
+
+/*
+find parent/child by section
+
+char *openwrt_section_relation_file, 	//input
+char *child_config, 				//input
+char *child_section_type,			//input
+char *parent_config, 				//input
+char *parent_section_type, 			//input
+char *key_name)					//output
+*/
+
+static int
+find_key_name_by_parent_child_section(char *openwrt_section_relation_file, char *child_config, char *child_section_type, char *parent_config, char *parent_section_type, char *key_name)
+{
+	FILE *fptr_cfg;
+	char buf_line[BUF_LINE_LEN], parent_cfg[TOKEN_LEN], child_cfg[TOKEN_LEN], key_in_child_cfg[TOKEN_LEN];
+	char child_input[TOKEN_LEN*2], parent_input[TOKEN_LEN*2];
+
+	if ( openwrt_section_relation_file == NULL) {
+		openwrt_section_relation_file=UTIL_SECTION_RELATION_CONFIGURE;	//"/etc/section_relation.cfg"
+	}
+
+        if ((fptr_cfg = fopen(openwrt_section_relation_file, "r")) == NULL) {
+                dbprintf("Can' t open file %s !!!\n", openwrt_section_relation_file);
+                return -1;
+        }
+	snprintf(child_input, TOKEN_LEN*2, "%s.@%s", child_config, child_section_type);
+	snprintf(parent_input, TOKEN_LEN*2, "%s.@%s", parent_config, parent_section_type);
+
+	while (fgets(buf_line, BUF_LINE_LEN, fptr_cfg) != 0) {
+		if (sscanf(buf_line, "%s %s %s", parent_cfg, child_cfg, key_in_child_cfg) != 3) {
+			dbprintf("invalid input: %s", buf_line);
+			fclose(fptr_cfg);
+			return -1;
+		}
+
+		if(strcmp(parent_input, parent_cfg)==0 && strcmp(child_input, child_cfg)==0) {
+			//found primary key name
+			strncpy(key_name, key_in_child_cfg, TOKEN_LEN);
+			if (util_ubus_debug)
+				dbprintf("found primary key name: %s\n", key_name);
+			return 0;
+		}
+	}
+	return -1;
+}
+
+static void
+find_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
+{
+	struct util_ubus_uci_get_priv_t *priv = req->priv;
+	char *value;
+	struct blob_attr *cur;
+	//int rem, index=0, found=0;
+	int rem, found;
+
+	if (!msg) {
+		priv->ret = UTIL_UBUS_ERROR_BLOB_MSG_NULL;
+		return;
+	}
+	if (util_ubus_debug)
+		util_ubus_dump_blobmsg(msg);
+
+	found=0;
+	blobmsg_for_each_attr(cur, msg, rem) {
+		unsigned int type = blobmsg_type(cur);
+		if (type == BLOBMSG_TYPE_TABLE) {
+			//section
+			struct blob_attr *_cur;
+			int _rem;
+
+			blobmsg_for_each_attr(_cur, cur, _rem) {
+				unsigned int _type = blob_id(_cur);
+				const struct blobmsg_hdr *hdr;
+
+				//maybe useful in some case
+				//if (!blob_is_extended(attr))
+				//continue;
+
+				/*
+					if the section is exist, we can find option like ".name": "cfg03f65c"
+				*/
+				hdr = blob_data(_cur);
+				if (_type == BLOBMSG_TYPE_STRING) {
+					//int len;
+
+					if ((value = blobmsg_get_string(_cur)) == NULL) {
+						priv->ret = UTIL_UBUS_ERROR_BLOB_ATTR_PARSE;
+						continue;
+					}
+
+					//only keep .name's value???
+					if (memcmp(hdr->name, ".name", 5) != 0) {
+						continue;
+					}
+
+					if (util_ubus_debug) {
+						dbprintf("type=%u(%s) name=%s\n", type, util_ubus_blogmsg_type_str(_type), (char *) hdr->name);
+						dbprintf("compare priv->value=%s, value=%s\n", priv->value, value);
+					}
+
+					found++;	//found section
+					if (strcmp(priv->value, value) == 0) {
+						if (util_ubus_debug)
+							dbprintf("found section name=%s\n", value);
+						priv->ret = UTIL_UBUS_OK_ENTRY_FOUND;
+					}
+				}
+			}
+		}
+	}
+
+	if (found >0 && priv->ret != UTIL_UBUS_OK_ENTRY_FOUND)	//still has valid section, but name is not fit
+		priv->ret = 0;
+
+	if (found == 0 && priv->ret == 0)
+		priv->ret = UTIL_UBUS_ERROR_ENTRY_NOT_FOUND;
+}
+
+int
+find_ubus_uci_get(char *config, char *section_type, char *key_value, unsigned int *section_index)
+{
+	struct blob_buf b;
+	unsigned int ubus_path_id;
+	int ret, index=-1;
+	char section_data[TOKEN_LEN];
+	struct util_ubus_uci_get_priv_t priv;
+
+	if (!config || !section_type || !key_value)
+		return UTIL_UBUS_ERROR_NULL_POINTER;
+
+	do {
+		index++;	//-1 -> 0 (start with 0)
+		priv.value_size = strlen(key_value);
+		priv.value = key_value;
+		priv.ret = UTIL_UBUS_ERROR_ENTRY_NOT_FOUND;
+
+		memset(&b, 0, sizeof(b));	// must! or blob_buf_init would segfault
+		blob_buf_init(&b, 0);
+
+		// prepare parameter
+		blobmsg_add_string(&b, "config",  config);
+		snprintf(section_data, TOKEN_LEN, "@%s[%d]", section_type, index);
+		blobmsg_add_string(&b, "section",  section_data);
+		//if(option)
+		//	blobmsg_add_string(&b, "option",  option);
+		blobmsg_add_string(&b, "ubus_rpc_session",  rpc_session_id);
+
+		// check if path 'session' is registered on ubusd
+		if ((ret = ubus_lookup_id(ubus_ctx, "uci", &ubus_path_id)) != 0) {
+			dbprintf("lookup 'uci' error %d(%s)\n", ret, util_ubus_error_str(ret));
+			blob_buf_free(&b);
+			return ret;
+		}
+
+		//key_value[0] = 0;
+		ubus_invoke(ubus_ctx, ubus_path_id, "get", b.head, find_ubus_uci_get_cb, &priv, ubus_invoke_timeout * 1000);
+		blob_buf_free(&b);
+	} while (priv.ret == 0);
+
+	if (priv.ret < 0) {
+		dbprintf("ubus_invoke uci::get cb error %d(%s)\n", priv.ret, util_ubus_error_str(priv.ret));
+		return priv.ret;
+	}
+
+	if (priv.ret == UTIL_UBUS_OK_ENTRY_FOUND) {
+		if (util_ubus_debug)
+			dbprintf("found entry %d(%s), index=%d\n", priv.ret, util_ubus_error_str(priv.ret), index);
+		*section_index=index;
+		return 0;
+	}
+	return priv.ret;
+}
+
+/*
+char *section_relation_file		// input configure file
+char *child_config,			// input
+char *child_section_type,		// input
+int child_section_index,		// input
+char *parent_config,			// input
+char *parent_section_type)		// input
+*/
+
+int
+find_parent_by_section_type(char *section_relation_file, char *child_config, char *child_section_type, int child_section_index, char *parent_config, char *parent_section_type)
+{
+	int ret=-1;
+	unsigned int parent_section_index;
+	char key_name[TOKEN_LEN], key_value[TOKEN_LEN], child_section_data[TOKEN_LEN];
+
+	if (find_key_name_by_parent_child_section(section_relation_file, child_config, child_section_type, parent_config, parent_section_type, key_name) < 0 ) {
+		ret=UTIL_ERROR_CAN_NOT_FIND_RELATED_KEY_NAME;
+		dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
+		return ret;
+	}
+
+	snprintf(child_section_data, TOKEN_LEN, "@%s[%d]", child_section_type, child_section_index);
+	//use key name get key value
+	if ((ret=util_ubus_uci_get(child_config, child_section_data, key_name, key_value, TOKEN_LEN)) < 0) {
+		ret=UTIL_ERROR_CAN_NOT_FIND_RELATED_KEY_VALUE;
+		dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
+		return ret;
+	}
+	//parent_config, parent_section_type, key_value
+	if (util_ubus_debug)
+		dbprintf("key_value=(%s)\n", key_value);
+
+	ret=find_ubus_uci_get(parent_config, parent_section_type, key_value, &parent_section_index);
+	if (ret == 0) {
+		if (util_ubus_debug) {
+			dbprintf("key_value=(%s)\n", key_value);
+			dbprintf("found parent section index=(%d)\n", parent_section_index);
+		}
+		return parent_section_index;
+	}
+	return ret;
+}
+
+/*
+char *section_relation_file		// input configure file
+char *child_config,			// input
+char *child_section_type,		// input
+int found_child_section_index[],	// output
+int child_section_index_size,		// input
+char *parent_config,			// input
+char *parent_section_type,		// input
+int parent_section_index)		// input
+*/
+
+int
+find_child_by_section_type(char *section_relation_file, char *child_config, char *child_section_type, int *found_child_section_index, int child_section_index_size, char *parent_config, char *parent_section_type, int parent_section_index)
+{
+	int ret=-1;
+	//unsigned int parent_section_index;
+	char key_name[TOKEN_LEN], primary_key_value[TOKEN_LEN], key_value[TOKEN_LEN], parent_section_data[TOKEN_LEN], child_section_data[TOKEN_LEN];
+	int index=-1, child_section_index=-1;
+
+	if (find_key_name_by_parent_child_section(section_relation_file, child_config, child_section_type, parent_config, parent_section_type, key_name) < 0 ) {
+		ret=UTIL_ERROR_CAN_NOT_FIND_RELATED_KEY_NAME;
+		//dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
+		return ret;
+	}
+
+	if (util_ubus_debug >=2)
+		dbprintf("key_name=(%s)\n", key_name);
+
+	//parent_config, parent_section_type, parent_section_index => section_name(key_value)
+	snprintf(parent_section_data, TOKEN_LEN, "@%s[%d]", parent_section_type, parent_section_index);
+	if ((ret = util_ubus_uci_get(parent_config, parent_section_data, NULL, primary_key_value, TOKEN_LEN)) != 0 ) { 
+		ret=UTIL_ERROR_CAN_NOT_FIND_RELATED_KEY_VALUE;
+		if (util_ubus_debug >=2)
+			dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
+		return ret;
+	}
+	if (util_ubus_debug >=2)
+		dbprintf("primary_key_value=(%s)\n", primary_key_value);
+
+	//list for each "child_config, child_section_type"
+	//if key_name's value == section_name ==> found one
+	do {
+		index++;	//-1 -> 0 (start with 0)
+		snprintf(child_section_data, TOKEN_LEN, "@%s[%d]", child_section_type, index);
+		//use key name get key value
+		if ((ret=util_ubus_uci_get(child_config, child_section_data, key_name, key_value, TOKEN_LEN)) == 0) {
+			if (util_ubus_debug >=2)
+				dbprintf("get key_value,primary_key_value = (%s),(%s)\n", key_value, primary_key_value);
+			//cmpare with primary_key_value
+			if (strcmp(primary_key_value, key_value) == 0) {
+				child_section_index++;	//-1 -> 0 (start with 0)
+				if (util_ubus_debug >=2)
+					dbprintf("found item child_section_index=%d\n\n", child_section_index);
+				if (child_section_index < child_section_index_size) {
+					*(found_child_section_index+child_section_index)=index;
+				} else {
+					dbprintf("child_section_index_size=(%d) is too small\n\n", child_section_index_size);
+					return UTIL_ERROR_BUFFER_FOR_RETURN_IS_TOO_SMALL;
+				}
+			}
+		}
+
+	} while(ret==0);
+
+	if (child_section_index ==-1) //can't found any entry 
+		return ret;
+
+	//return number of elements in found_child_section_index[]
+	return (child_section_index+1);
+}
+
+
+
