@@ -11,7 +11,7 @@
 static inline char *util_purename(char *path) { char *delim=rindex(path, '/'); return delim?(delim+1):path; }
 #define dbprintf(fmt, args...)		do { fprintf(stderr,"%s:%d: %s(): " fmt, util_purename(__FILE__), __LINE__, __FUNCTION__, ##args); } while (0)
 
-#define UTIL_UBUS_DEBUG_DEFAULT		1
+#define UTIL_UBUS_DEBUG_DEFAULT		0
 #define UBUS_INVOKE_TIMEOUT_DEFAULT	30
 #define HAS_MAIN			1
 #define BUF_LINE_LEN			1024	//ex: wireless.@wifi-device   wireless.@wifi-iface    device

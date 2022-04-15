@@ -366,8 +366,8 @@ util_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 							priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
 							return;
 						}
-						strncat(priv->value, ", " , priv->value_size-1-len);
-						len+=2;
+						strncat(priv->value, " " , priv->value_size-1-len);
+						len+=1;
 					}
 					if (priv->value_size-1-len < strlen(value)) {
 						priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
@@ -409,8 +409,10 @@ util_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 						continue;
 					}
 
-					//only keep .name's value???
-					if (memcmp(hdr->name, ".name", 5) != 0) {
+					//only keep .type's value???
+					//if (memcmp(hdr->name, ".type", 5) != 0) {
+					if (memcmp(hdr->name, ".anonymous", 10) == 0 ||
+					        memcmp(hdr->name, ".name", 5) == 0    ) {
 						continue;
 					}
 
@@ -419,14 +421,16 @@ util_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 							priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
 							return;
 						}
-						strncat(priv->value, ", " , priv->value_size-1-len);
-						len+=2;
+						strncat(priv->value, "," , priv->value_size-1-len);
+						len+=1;
 					}
-					if (priv->value_size-1-len < strlen(value)) {
+					if (priv->value_size-1-len < strlen(value)+strlen((char *)hdr->name)+1) {
 						priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
 						return;
 					}
-					strncat(priv->value, value, priv->value_size-1-len);
+					strncat(priv->value, (char *)hdr->name, priv->value_size-1-strlen(priv->value));
+					strncat(priv->value, ":", priv->value_size-1-strlen(priv->value));
+					strncat(priv->value, value, priv->value_size-1-strlen(priv->value));
 					found++;
 
 				} else if (_type == BLOBMSG_TYPE_INT64 || _type == BLOBMSG_TYPE_INT32 ||
@@ -439,9 +443,52 @@ util_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 						dbprintf("type=%u(%s)\n", type, util_ubus_blogmsg_type_str(_type));
 
 				} else if (_type == BLOBMSG_TYPE_ARRAY) {
-					if (util_ubus_debug)
-						dbprintf("type=%u(%s)\n", type, util_ubus_blogmsg_type_str(_type));
+				    struct blob_attr *_cur1;
+				    int _rem1, len1=0, list_cnt=0;
+				    hdr = blob_data(_cur);
+                    if ( (len1=strlen(priv->value)) > 0 )
+                    {
+                        if ( priv->value_size - 1 - len1 <= 2 )
+                        {
+                            priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
+                            return;
+                        }
+                        strncat(priv->value, ",", priv->value_size - 1 - len1);
+                    }
+				    strncat(priv->value, (char *)hdr->name, priv->value_size-1-strlen(priv->value));
+				    strncat(priv->value, ":", priv->value_size-1-strlen(priv->value));
+                    blobmsg_for_each_attr(_cur1, _cur, _rem1)
+                    {
+                        if ( (value = blobmsg_get_string(_cur1)) == NULL )
+                        {
+                            priv->ret = UTIL_UBUS_ERROR_BLOB_ATTR_PARSE;
+                            continue;
+                        }
+                        if ((len1 = strlen(priv->value)) > 0 )
+                        {
+                            if ( priv->value_size - 1 - len1 <= 2 )
+                            {
+                                priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
+                                return;
+                            }
+                            if(list_cnt>0)
+                            {
+                                strncat(priv->value, " ", priv->value_size - 1 - len1);
+                                len1 += 1;
+                            }
+                        }
+                        if ( priv->value_size - 1 - len1 < strlen(value) + 1 )
+                        {
+                            priv->ret = UTIL_UBUS_ERROR_VALUE_BUFFER_TOO_SMALL;
+                            return;
+                        }
 
+                        strncat(priv->value, value, priv->value_size - 1 - len1);
+                        found++;
+                        list_cnt++;
+                        if ( util_ubus_debug )
+                            dbprintf("type=%u(%s)\n", type, util_ubus_blogmsg_type_str(_type));
+                    }
 				} else {
 					if (util_ubus_debug)
 						dbprintf("2nd layer: unsupported  blobmsg_type %u(%s)\n", _type, util_ubus_blogmsg_type_str(_type));
@@ -617,7 +664,6 @@ util_ubus_uci_add_section(char *config, char *type, char *name)
 
 	memset(&b, 0, sizeof(b));	// must! or blob_buf_init would segfault
 	blob_buf_init(&b, 0);
-
 	// prepare parameter
 	blobmsg_add_string(&b, "config",  config);
 	blobmsg_add_string(&b, "type",  type);
