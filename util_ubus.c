@@ -438,7 +438,7 @@ util_ubus_uci_get_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 					if (util_ubus_debug)
 						dbprintf("type=%u(%s)\n", type, util_ubus_blogmsg_type_str(_type));
 
-				} else if (_type == BLOBMSG_TYPE_BOOL || _type == BLOBMSG_TYPE_DOUBLE) {
+				} else if (_type == BLOBMSG_TYPE_BOOL ) {
 					if (util_ubus_debug)
 						dbprintf("type=%u(%s)\n", type, util_ubus_blogmsg_type_str(_type));
 

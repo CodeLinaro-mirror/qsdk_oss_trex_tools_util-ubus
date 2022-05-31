@@ -34,7 +34,7 @@ gateway "network gateway"
 disabled    "disable network"
 
 example :
-pre_del=1 interface=wan ifname=eth0 ipaddr=192.168.33.200 netmask=255.255.255.0 gateway=192.168.33.1 mtu=1500 ./net_static.sh
+pre_del=1 interface=wan ifname=eth0 ipaddr=192.168.33.200 netmask=255.255.255.0 gateway=192.168.33.1 mtu=1500 dns1=8.8.8.8 dns2=0.0.0.0 ./net_static.sh
 
 util_uci [filename]
 add     <config> <section>
