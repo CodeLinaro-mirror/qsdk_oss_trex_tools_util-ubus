@@ -29,5 +29,5 @@ echo set dhcp.wan.ignore='1' >> /tmp/dhcp_in
 
 echo commit >> /tmp/dhcp_in
 echo restart >> /tmp/dhcp_in
-/usr/bin/util_uci /tmp/dhcp_in
+/usr/bin/util_uci -f /tmp/dhcp_in
 rm /tmp/dhcp_in

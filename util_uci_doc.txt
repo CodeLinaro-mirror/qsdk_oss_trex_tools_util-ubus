@@ -32,11 +32,13 @@ netmask "network netmask"
 mtu
 gateway "network gateway"
 disabled    "disable network"
+dns1
+dns2
 
 example :
 pre_del=1 interface=wan ifname=eth0 ipaddr=192.168.33.200 netmask=255.255.255.0 gateway=192.168.33.1 mtu=1500 dns1=8.8.8.8 dns2=0.0.0.0 ./net_static.sh
 
-util_uci [filename]
+util_uci [-f filename]
 add     <config> <section>
 set     <config>.<section>[.<option>]=<value>
 get     <config>.<section>[.<option>]
@@ -46,7 +48,7 @@ commit  [<config>]
 restart
 
 ex1:
-/root/util_uci << EOF
+/usr/bin/util_uci << EOF
 del ucitest.wan
 set ucitest.wan=interface
 set ucitest.wan.type=bridge
@@ -79,4 +81,7 @@ set dhcp.wan.ignore=1
 commit
 restart
 
-/root/util_uci pppoe_in
+/usr/bin/util_uci -f pppoe_in
+
+ex3:
+/usr/bin/util_uci get network.lan.ifname

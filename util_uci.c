@@ -302,18 +302,47 @@ int main(int argc, char *argv[])
 
     if(argc>1)
     {
-       if(!(input = fopen(argv[1],"r")))
-       {
-         printf("open %s error!\n",argv[1]);
-         util_ubus_client_finish();
-         return -1;
-       }
+        if ( strncmp(argv[1], "-f", 2) == 0 )
+        {
+            if ( argc > 2 )
+            {
+                if ( !(input = fopen(argv[2], "r")) )
+                {
+                    printf("open %s error!\n", argv[2]);
+                    util_ubus_client_finish();
+                    return -1;
+                }
+            }
+        }
+        else
+        {
+            line = malloc(256);
+            if ( !line )
+                return -1;
+            memset(line, 0, 256);
+            for (int i = 1; i < argc; i++)
+            {
+                strcat(line, argv[i]);
+                strcat(line, " ");
+            }
+            line[strlen(line)-1]=0;
+            strcat(line, "\n");
+            uci_line_init(&uci_line,0);
+            uci_line_parser(line, &uci_line);
+            if ( dbg_level )
+                uci_line_dump(&uci_line);
+            ret = uci_run(&uci_line);
+            dbprintf_wanif("ret=%d\n", ret);
+            uci_line_init(&uci_line, 1);
+            free(line);
+            line = NULL;
+            util_ubus_client_finish();
+            return 0;
+        }
     }
     uci_line_init(&uci_line,0);
     while(!feof(input))
     {
-        //sleep(1);
-        //fgets(line, 255, stdin);
         lineSize = getline(&line, &len, input);
 
         if ( lineSize == 1 )
@@ -323,7 +352,7 @@ int main(int argc, char *argv[])
             uci_line_parser(line, &uci_line);
             if(dbg_level) uci_line_dump(&uci_line);
             ret = uci_run(&uci_line);
-            if(dbg_level) printf("ret=%d\n", ret);
+            dbprintf_wanif("ret=%d\n", ret);
             uci_line_init(&uci_line,1);
         }
         if ( line )

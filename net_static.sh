@@ -46,6 +46,6 @@ echo set dhcp.$section.ignore=1 >> /tmp/static_in
 
 echo commit >> /tmp/static_in
 echo restart >> /tmp/static_in
-/usr/bin/util_uci /tmp/static_in
+/usr/bin/util_uci -f /tmp/static_in
 rm /tmp/static_in
 

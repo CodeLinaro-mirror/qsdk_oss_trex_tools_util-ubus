@@ -35,5 +35,5 @@ echo set dhcp.wan.ignore='1' >> /tmp/pppoe_in
 
 echo commit >> /tmp/pppoe_in
 echo restart >> /tmp/pppoe_in
-/usr/bin/util_uci /tmp/pppoe_in
+/usr/bin/util_uci -f /tmp/pppoe_in
 rm /tmp/pppoe_in
