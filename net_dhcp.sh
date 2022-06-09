@@ -22,12 +22,13 @@ if [ -n "$disabled" ]; then
 fi
 
 ## dhcp config
-echo del dhcp.wan >> /tmp/dhcp_in
-echo set dhcp.wan=dhcp >> /tmp/dhcp_in
-echo set dhcp.wan.interface='wan' >> /tmp/dhcp_in
-echo set dhcp.wan.ignore='1' >> /tmp/dhcp_in
+echo del dhcp.$section >> /tmp/dhcp_in
+echo set dhcp.$section=dhcp >> /tmp/dhcp_in
+echo set dhcp.$section.interface=$section >> /tmp/dhcp_in
+echo set dhcp.$section.ignore='1' >> /tmp/dhcp_in
 
-echo commit >> /tmp/dhcp_in
+echo commit network >> /tmp/dhcp_in
+echo commit dhcp >> /tmp/dhcp_in
 echo restart >> /tmp/dhcp_in
 /usr/bin/util_uci -f /tmp/dhcp_in
 rm /tmp/dhcp_in

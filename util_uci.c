@@ -163,7 +163,10 @@ int uci_line_parser(char *input_line, UCI_LINE *line)
 int uci_cmd_add(UCI_LINE *line)
 {
     int ret;
-    ret = util_ubus_uci_add_section(line->package, "interface", line->section);
+    if(strncmp(line->package,"network",strlen(line->package))==0)
+        ret = util_ubus_uci_add_section(line->package, "interface", line->section);
+    else
+        ret = util_ubus_uci_add_section(line->package, line->section, line->section);
     dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
     return ret;
 }
@@ -190,20 +193,24 @@ int uci_cmd_get(UCI_LINE *line)
     char *name,*value;
     ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf)-1);
     dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret),buf);
-    if(line->option)
-        printf("%s.%s.%s=%s\n",line->package,line->section,line->option,buf);
-    else
+    if(ret >=0)
     {
-        name=strtok(buf,":");
-        if(!name)   return ret;
-        do
+        if ( line->option )
+            printf("%s.%s.%s=%s\n", line->package, line->section, line->option, buf);
+        else
         {
-            value=strtok(NULL,",");
-            if(name[0]=='.')
-                printf("%s.%s=%s\n",line->package,line->section,value);
-            else
-                printf("%s.%s.%s=%s\n",line->package,line->section,name,value);
-        }while((name=strtok(NULL,":")));
+            name = strtok(buf, ":");
+            if ( !name )
+                return ret;
+            do
+            {
+                value = strtok(NULL, ",");
+                if ( name[0] == '.' )
+                    printf("%s.%s=%s\n", line->package, line->section, value);
+                else
+                    printf("%s.%s.%s=%s\n", line->package, line->section, name, value);
+            } while ((name = strtok(NULL, ":")));
+        }
     }
     return ret;
 }

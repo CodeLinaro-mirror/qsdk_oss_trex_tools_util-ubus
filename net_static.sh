@@ -44,7 +44,8 @@ echo set dhcp.$section=dhcp >> /tmp/static_in
 echo set dhcp.$section.interface=$section >> /tmp/static_in
 echo set dhcp.$section.ignore=1 >> /tmp/static_in
 
-echo commit >> /tmp/static_in
+echo commit network>> /tmp/static_in
+echo commit dhcp>> /tmp/static_in
 echo restart >> /tmp/static_in
 /usr/bin/util_uci -f /tmp/static_in
 rm /tmp/static_in

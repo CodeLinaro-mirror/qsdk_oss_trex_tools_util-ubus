@@ -546,7 +546,7 @@ util_ubus_uci_get(char *config, char *section, char *option, char *value, unsign
 	blob_buf_free(&b);
 
 	if (priv.ret <0) {
-		dbprintf("ubus_invoke uci::get cb error %d(%s)\n", priv.ret, util_ubus_error_str(priv.ret));
+		printf("uci:%s\n", util_ubus_error_str(priv.ret));
 		return priv.ret;
 	}
 	return 0;
@@ -595,7 +595,7 @@ util_ubus_uci_set(char *config, char *section, char *option, char *value)
 	}
 
 	if ((ret = ubus_invoke(ubus_ctx, ubus_path_id, "set", b.head, util_ubus_uci_set_cb, NULL, ubus_invoke_timeout * 1000)) != 0)
-		dbprintf("ubus_invoke uci::set error %d(%s)\n", ret, util_ubus_error_str(ret));
+		printf("uci:%s\n", util_ubus_error_str(ret));
 	blob_buf_free(&b);
 	return ret;
 }
@@ -634,7 +634,7 @@ util_ubus_uci_set_list(char *config, char *section, char *option, char *array[],
 	}
 
 	if ((ret = ubus_invoke(ubus_ctx, ubus_path_id, "set", b.head, util_ubus_uci_set_cb, NULL, ubus_invoke_timeout * 1000)) != 0)
-		dbprintf("ubus_invoke uci::set error %d(%s)\n", ret, util_ubus_error_str(ret));
+		printf("uci:%s\n", ret, util_ubus_error_str(ret));
 	blob_buf_free(&b);
 	return ret;
 }

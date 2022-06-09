@@ -28,12 +28,13 @@ if [ -n "$disabled" ]; then
 fi
 
 ## dhcp config
-echo del dhcp.wan >> /tmp/pppoe_in
-echo set dhcp.wan=dhcp >> /tmp/pppoe_in
-echo set dhcp.wan.interface='wan' >> /tmp/pppoe_in
-echo set dhcp.wan.ignore='1' >> /tmp/pppoe_in
+echo del dhcp.$section >> /tmp/pppoe_in
+echo set dhcp.$section=dhcp >> /tmp/pppoe_in
+echo set dhcp.$section.interface=$section >> /tmp/pppoe_in
+echo set dhcp.$section.ignore='1' >> /tmp/pppoe_in
 
-echo commit >> /tmp/pppoe_in
+echo commit network >> /tmp/pppoe_in
+echo commit dhcp >> /tmp/pppoe_in
 echo restart >> /tmp/pppoe_in
 /usr/bin/util_uci -f /tmp/pppoe_in
 rm /tmp/pppoe_in
