@@ -11,7 +11,8 @@ static inline char *util_purename(char *path) { char *delim=rindex(path, '/'); r
 int dbg_level=0;
 static struct ubus_context * ctx = NULL;
 static const char * cli_path;
-static int shutdown=0;
+static int shutdown=0,trap_mode=-1,fake_mode=-1;
+static char ifname[16]={0};
  
 #define	UBUS_EVENT_CTL	"util_ubus_event"
 #define	UBUS_EVENT_REMOVE_DEVICE	"rm_device"
@@ -28,96 +29,135 @@ static void shutdown_timer(struct uloop_timeout *timeout)
 
 static void shell_timer(struct uloop_timeout *timeout)
 {
-    dbprintf("call interface up script!\n");
-    system("/usr/bin/set_igmp_route.sh");
+        char cmd[128]={0};
+        if(trap_mode != -1 || fake_mode!=-1 )
+        {
+                snprintf(cmd, 127, "ifname=%s trap_mode=%d fake_mode=%d set_igmp_route.sh",
+                                ifname, trap_mode, fake_mode);
+                dbprintf("call script: %s\n", cmd);
+                system(cmd);
+        }
+        else
+        {
+                dbprintf("trap_mode or fake mode unknown ! \n");
+        }
 }
 
 static struct uloop_timeout timer_shutdown = { .cb = shutdown_timer };
 static struct uloop_timeout timer_shell = { .cb = shell_timer };
 
+int ubus_get_objstr(struct blob_attr *msg, char *key, char *str, int strlen)
+{
+        int ret=0;
+        json_object *jobj;
+        enum json_type jtype;
+        json_object *obj_key;
+        const char *strval;
+        jobj = json_tokener_parse(blobmsg_format_json(msg, true));
+        if ( json_object_object_get_ex(jobj, key, &obj_key) )
+        {
+                jtype = json_object_get_type(obj_key);
+                switch (jtype)
+                {
+                        case json_type_string:
+                                strval = json_object_get_string(obj_key);
+                                dbprintf("%s=%s\n", key, strval);
+                                strncpy(str, strval, strlen);
+                                break;
+                        default:
+                                ret=-1;
+                                break;
+                }
+                json_object_put(obj_key);
+        }
+        else
+                ret=-1;
+        json_object_put(jobj);
+        return ret;
+}
+
+int ubus_get_objint(struct blob_attr *msg, char *key, int *value)
+{
+        int ret=0;
+        json_object *jobj;
+        enum json_type jtype;
+        json_object *obj_key;
+
+        jobj = json_tokener_parse(blobmsg_format_json(msg, true));
+        if ( json_object_object_get_ex(jobj, key, &obj_key) )
+        {
+                jtype = json_object_get_type(obj_key);
+                switch (jtype)
+                {
+                        case json_type_int:
+                                *value = json_object_get_int(obj_key);
+                                dbprintf("%s=%d\n", key, *value);
+                                break;
+                        default:
+                                ret=-1;
+                                break;
+                }
+                json_object_put(obj_key);
+        }
+        else
+                ret=-1;
+        json_object_put(jobj);
+        return ret;
+}
+
 static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
 			  const char *type, struct blob_attr *msg)
 {
-    char *str;
-    const char *strval;
-    int intval;
-    json_object *jobj;
-    enum json_type jtype;
-    json_object *obj_key;
-    int ifup = 0;
+        char *str;
+        const char *strval;
+        //int intval;
+        json_object *jobj;
+        //enum json_type jtype;
+        json_object *obj_key;
+        int ifup = 0;
 
-    if ( !msg )
-        return;
+        if ( !msg )
+                return;
 
-    str = blobmsg_format_json(msg, true);
-    dbprintf("{ \"%s\": %s }\n", type, str);
-    jobj = json_tokener_parse(str);
+        str = blobmsg_format_json(msg, true);
+        dbprintf("{ \"%s\": %s }\n", type, str);
+        jobj = json_tokener_parse(str);
 
-    if ( strncmp(type, UBUS_EVENT_CTL, strlen(UBUS_EVENT_CTL)) == 0 )
-    {
-        if ( json_object_object_get_ex(jobj, "set_delay", &obj_key) )
+        if ( strncmp(type, UBUS_EVENT_CTL, strlen(UBUS_EVENT_CTL)) == 0 )
         {
-            jtype = json_object_get_type(obj_key);
-            switch (jtype)
-            {
-                case json_type_int:
-                    intval = json_object_get_int(obj_key);
-                    dbprintf("jtype=%d, val(int)=%d\n", jtype, intval);
-                    timer_delay = intval;
-                    break;
-                default:
-                    break;
-            }
-            json_object_put(obj_key);
+                ubus_get_objint(msg, "set_delay", &timer_delay);
+                if(!ubus_get_objint(msg, "shutdown", &shutdown))
+                {
+                        if ( shutdown )
+                                uloop_timeout_set(&timer_shutdown,timer_delay * 1000);
+                }
+                ubus_get_objstr(msg, "ifname", ifname, sizeof(ifname));
+                ubus_get_objint(msg, "trap_mode", &trap_mode);
+                ubus_get_objint(msg, "fake_mode", &fake_mode);
         }
-        if ( json_object_object_get_ex(jobj, "shutdown", &obj_key) )
+        else if ( strncmp(type, UBUS_EVENT_NETWORK, strlen(UBUS_EVENT_NETWORK)) == 0 )
         {
-            jtype = json_object_get_type(obj_key);
-            switch (jtype)
-            {
-                case json_type_string:
-                    strval = json_object_get_string(obj_key);
-                    dbprintf("jtype=%d, val(str)=%s\n", jtype, strval);
-                    shutdown = atoi(strval);
-                    if ( shutdown )
-                        uloop_timeout_set(&timer_shutdown, timer_delay * 1000);
-                    break;
-                case json_type_int:
-                    intval = json_object_get_int(obj_key);
-                    dbprintf("jtype=%d, val(int)=%d\n", jtype, intval);
-                    shutdown = intval;
-                    if ( shutdown )
-                        uloop_timeout_set(&timer_shutdown, timer_delay * 1000);
-                    break;
-                default:
-                    break;
-            }
-            json_object_put(obj_key);
+                if ( json_object_object_get_ex(jobj, "action", &obj_key) )
+                {
+                        strval = json_object_get_string(obj_key);
+                        if ( strncmp(strval, "ifup", strlen("ifup")) == 0 )
+                                ifup = 1;
+                        else
+                                ifup = 0;
+                        json_object_put(obj_key);
+                }
+                if ( json_object_object_get_ex(jobj, "interface", &obj_key) )
+                {
+                        strval = json_object_get_string(obj_key);
+                        if ( strncmp(strval, "lan", strlen("lan")) == 0 && ifup )
+                        {
+                                uloop_timeout_set(&timer_shell, timer_delay * 1000);
+                        }
+                        json_object_put(obj_key);
+                }
         }
-    }
-    else if ( strncmp(type, UBUS_EVENT_NETWORK, strlen(UBUS_EVENT_NETWORK)) == 0 )
-    {
-        if ( json_object_object_get_ex(jobj, "action", &obj_key) )
-        {
-            strval = json_object_get_string(obj_key);
-            if ( strncmp(strval, "ifup", strlen("ifup")) == 0 )
-                ifup = 1;
-            else
-                ifup = 0;
-            json_object_put(obj_key);
-        }
-        if ( json_object_object_get_ex(jobj, "interface", &obj_key) )
-        {
-            strval = json_object_get_string(obj_key);
-            if ( strncmp(strval, "lan", strlen("lan")) == 0 && ifup )
-            {
-                uloop_timeout_set(&timer_shell, timer_delay * 1000);
-            }
-            json_object_put(obj_key);
-        }
-    }
-    json_object_put(jobj);
-    free(str);
+        json_object_put(jobj);
+        free(str);
 }
  
 static int client_ubus_register_events()
@@ -202,25 +242,28 @@ static void client_ubus_done(void)
  
 int main(int argc, char * argv[])
 {
-    const char *dbg_str = getenv("UTIL_DBG");
-    if ( dbg_str )
-    {
-        dbg_level = atoi(dbg_str);
-        //printf("dbg_level=%d\n",dbg_level);
-    }
-	char * path = NULL;
- 
-	if (UBUS_STATUS_OK != client_ubus_init(path))
-	{
-		printf("ubus connect failed!\n");
-		return -1;
-	}
- 
-	client_ubus_register_events();
- 
-	uloop_run();
-	
-	client_ubus_done();
- 
-	return 0;
+        char *path = NULL;
+        const char *dbg_str = getenv("UTIL_DBG");
+        if ( dbg_str )
+        {
+                dbg_level = atoi(dbg_str);
+                //printf("dbg_level=%d\n",dbg_level);
+        }
+
+        if ( UBUS_STATUS_OK != client_ubus_init(path) )
+        {
+                printf("ubus connect failed!\n");
+                return -1;
+        }
+        //init variable
+        strcpy(ifname,"eth4");
+        trap_mode=-1;
+        fake_mode=-1;
+        client_ubus_register_events();
+
+        uloop_run();
+
+        client_ubus_done();
+
+        return 0;
 }

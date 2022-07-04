@@ -131,6 +131,7 @@ int uci_line_parser(char *input_line, UCI_LINE *line)
             break;
         case UCI_CMD_CHANGES:
         case UCI_CMD_COMMIT:
+        case UCI_CMD_RESTART:
             pt=strtok(NULL, "\n");
             break;
         case UCI_CMD_SET:
@@ -233,10 +234,22 @@ int uci_cmd_commit(UCI_LINE *line)
 }
 int uci_cmd_restart(UCI_LINE *line)
 {
-    int ret;
-    //system("/etc/init.d/network restart &");
-    ret=system("ubus call network restart &");
-    return ret;
+        int ret;
+        char cmd[64]={0};
+        if ( line->package )
+        {
+                snprintf(cmd, 63, "ifdown %s", line->package);
+                system(cmd);
+                sleep(1);
+                snprintf(cmd, 63, "ifup %s", line->package);
+                ret = system(cmd);
+        }
+        else
+        {
+                //system("/etc/init.d/network restart &");
+                ret = system("ubus call network restart &");
+        }
+        return ret;
 }
 
 typedef int uci_fn_t(UCI_LINE *line);
