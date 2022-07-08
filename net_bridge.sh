@@ -1,10 +1,10 @@
 #!/bin/sh
 
 if [ $cleanall -eq 1 ]; then
-	echo del network.lan0 > /tmp/bridge_in
+	echo del network.lan > /tmp/bridge_in
+	echo del network.lan0 >> /tmp/bridge_in
 	echo del network.lan1 >> /tmp/bridge_in
 	echo del network.lan2 >> /tmp/bridge_in
-	echo del network.lan3 >> /tmp/bridge_in
 else
 	if [ -n "$interface" ]; then
 	        section=$interface
