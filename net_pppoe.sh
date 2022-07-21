@@ -1,4 +1,17 @@
 #!/bin/sh
+
+# parameter :
+# pre_del	- delete old network setting
+# interface	- network section name
+# ifname	- network device name
+# username	- pppoe username
+# passwd	- pppoe password
+# mtu		- mtu
+# disabled	- disable network
+#
+# example:
+# pre_del=1 interface=wan ifname=eth0 mtu=1500 username=pppoe passwd=12345678 disabled=0 ./net_pppoe.sh
+
 if [ -n "$interface" ]; then
         section=$interface
 else

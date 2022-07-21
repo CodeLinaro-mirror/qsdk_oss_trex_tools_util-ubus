@@ -1,5 +1,18 @@
 #!/bin/sh
 
+# parameter:
+# pre_del	- delete old network setting
+# interface	- network section name
+# ifname	- network device name
+# ipaddr	- network ip address
+# netmask	- network netmask
+# gateway	- network gateway
+# disabled	- disable network
+#
+# example:
+# pre_del=1 interface=lan0 ifname='eth0.2.0 eth0.3.0 eth0.4.0 eth0.5.0' ipaddr=192.168.1.1 netmask=255.255.255.0 gateway=192.168.1.254 disabled=0 ./net_bridge.sh
+
+
 if [ $cleanall -eq 1 ]; then
 	echo del network.lan > /tmp/bridge_in
 	echo del network.lan0 >> /tmp/bridge_in

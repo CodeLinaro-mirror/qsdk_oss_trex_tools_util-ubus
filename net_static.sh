@@ -1,4 +1,20 @@
 #!/bin/sh
+
+# parameter:
+# pre_del 	- delete old network setting
+# interface   	- network section name
+# ifname	- network device name
+# ipaddr	- network ip address
+# netmask	- network netmask
+# mtu		- mtu
+# gateway	- network gateway
+# disabled	- disable network
+# dns1		- dns1
+# dns2		- dns2
+#
+# example:
+# pre_del=1 interface=wan ifname=eth0 ipaddr=192.168.33.200 netmask=255.255.255.0 gateway=192.168.33.1 mtu=1500 dns1=8.8.8.8 dns2=0.0.0.0 ./net_static.sh
+
 if [ -n "$interface" ]; then
         section=$interface
 else
