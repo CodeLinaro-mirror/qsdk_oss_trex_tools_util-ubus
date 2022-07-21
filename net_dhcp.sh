@@ -5,7 +5,7 @@
 # interface	- network section name
 # ifname	- network device name
 # mtu		- mtu
-# disabled22	- disable network
+# disabled	- disable network
 # 
 # example:
 # pre_del=1 interface=wan ifname=eth0 mtu=1500 disabled=0 ./net_dhcp.sh
