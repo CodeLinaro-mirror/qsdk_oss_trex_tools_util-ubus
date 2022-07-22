@@ -29,4 +29,4 @@ clean:
 dist: all
 	echo "scp util_uci"
 	scp util_uci_arm root@172.20.0.200:/root/util_uci_arm
-	scp *.sh root@172.20.0.200:/root/
+	scp util_uci.script/*.sh root@172.20.0.200:/root/

@@ -16,7 +16,7 @@ if [ -n "$interface" ]; then
 else
 	section="wan6"
 fi
-tmpfile=/var/run/net_dhcpb6.$section.$$
+tmpfile=/var/run/net_dhcpv6.$section.$$
 
 if [ -n "$pre_del" ]; then
 	echo del network.$section > $tmpfile
