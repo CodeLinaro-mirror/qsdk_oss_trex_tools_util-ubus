@@ -8,8 +8,8 @@
 # proto|device|l3_device
 # ipaddr[1-3]_			(addr|mask|ptpaddr) ipv4 addr assigned by static/dhcp/pppoe
 # ip6addr[1-3]_			(addr|mask) -ipv6 addr assigned by static/dhcpv6
-# ip6prefix[1-3]_		(addr|mask) - ipv6 subnet assigned by static
-# ip6prefix_assignment[1-3]_	(addr|mask|preferred|valid|localaddr|localmask) - ipv6 subnet assigned by dhcpv6
+# ip6pf[1-3]_			(addr|mask) - ipv6 subnet assigned by static
+# ip6pf_assign[1-3]_		(addr|mask|preferred|valid|localaddr|localmask) - ipv6 subnet assigned by dhcpv6
 # route[1-4]_			(target|mask|nexthop|metric|valid|source)
 # dns[1-4]
 # 
@@ -43,30 +43,30 @@ ubus call network.interface.$1 status|jsonfilter \
 -e ip6addr2_mask='@["ipv6-address"][1].mask' \
 -e ip6addr3_addr='@["ipv6-address"][2].address' \
 -e ip6addr3_mask='@["ipv6-address"][2].mask' \
--e ip6prefix1_addr='@["ipv6-prefix"][0].address' \
--e ip6prefix1_mask='@["ipv6-prefix"][0].mask' \
--e ip6prefix2_addr='@["ipv6-prefix"][1].address' \
--e ip6prefix2_mask='@["ipv6-prefix"][1].mask' \
--e ip6prefix3_addr='@["ipv6-prefix"][2].address' \
--e ip6prefix3_mask='@["ipv6-prefix"][2].mask' \
--e ip6prefix_assignment1_addr='@["ipv6-prefix-assignment"][0].addr' \
--e ip6prefix_assignment1_mask='@["ipv6-prefix-assignment"][0].mask' \
--e ip6prefix_assignment1_preferred='@["ipv6-prefix-assignment"][0].preferred' \
--e ip6prefix_assignment1_valid='@["ipv6-prefix-assignment"][0].valid' \
--e ip6prefix_assignment1_localaddr='@["ipv6-prefix-assignment"][0]["local-address"].address' \
--e ip6prefix_assignment1_localmask='@["ipv6-prefix-assignment"][0]["local-address"].mask' \
--e ip6prefix_assignment2_addr='@["ipv6-prefix-assignment"][1].addr' \
--e ip6prefix_assignment2_mask='@["ipv6-prefix-assignment"][1].mask' \
--e ip6prefix_assignment2_preferred='@["ipv6-prefix-assignment"][1].preferred' \
--e ip6prefix_assignment2_valid='@["ipv6-prefix-assignment"][1].valid' \
--e ip6prefix_assignment2_localaddr='@["ipv6-prefix-assignment"][1]["local-address"].address' \
--e ip6prefix_assignment2_localmask='@["ipv6-prefix-assignment"][1]["local-address"].mask' \
--e ip6prefix_assignment3_addr='@["ipv6-prefix-assignment"][2].addr' \
--e ip6prefix_assignment3_mask='@["ipv6-prefix-assignment"][2].mask' \
--e ip6prefix_assignment3_preferred='@["ipv6-prefix-assignment"][2].preferred' \
--e ip6prefix_assignment3_valid='@["ipv6-prefix-assignment"][2].valid' \
--e ip6prefix_assignment3_localaddr='@["ipv6-prefix-assignment"][2]["local-address"].address' \
--e ip6prefix_assignment3_localmask='@["ipv6-prefix-assignment"][2]["local-address"].mask' \
+-e ip6pf1_addr='@["ipv6-prefix"][0].address' \
+-e ip6pf1_mask='@["ipv6-prefix"][0].mask' \
+-e ip6pf2_addr='@["ipv6-prefix"][1].address' \
+-e ip6pf2_mask='@["ipv6-prefix"][1].mask' \
+-e ip6pf3_addr='@["ipv6-prefix"][2].address' \
+-e ip6pf3_mask='@["ipv6-prefix"][2].mask' \
+-e ip6pf_assign1_addr='@["ipv6-prefix-assignment"][0].addr' \
+-e ip6pf_assign1_mask='@["ipv6-prefix-assignment"][0].mask' \
+-e ip6pf_assign1_preferred='@["ipv6-prefix-assignment"][0].preferred' \
+-e ip6pf_assign1_valid='@["ipv6-prefix-assignment"][0].valid' \
+-e ip6pf_assign1_localaddr='@["ipv6-prefix-assignment"][0]["local-address"].address' \
+-e ip6pf_assign1_localmask='@["ipv6-prefix-assignment"][0]["local-address"].mask' \
+-e ip6pf_assign2_addr='@["ipv6-prefix-assignment"][1].addr' \
+-e ip6pf_assign2_mask='@["ipv6-prefix-assignment"][1].mask' \
+-e ip6pf_assign2_preferred='@["ipv6-prefix-assignment"][1].preferred' \
+-e ip6pf_assign2_valid='@["ipv6-prefix-assignment"][1].valid' \
+-e ip6pf_assign2_localaddr='@["ipv6-prefix-assignment"][1]["local-address"].address' \
+-e ip6pf_assign2_localmask='@["ipv6-prefix-assignment"][1]["local-address"].mask' \
+-e ip6pf_assign3_addr='@["ipv6-prefix-assignment"][2].addr' \
+-e ip6pf_assign3_mask='@["ipv6-prefix-assignment"][2].mask' \
+-e ip6pf_assign3_preferred='@["ipv6-prefix-assignment"][2].preferred' \
+-e ip6pf_assign3_valid='@["ipv6-prefix-assignment"][2].valid' \
+-e ip6pf_assign3_localaddr='@["ipv6-prefix-assignment"][2]["local-address"].address' \
+-e ip6pf_assign3_localmask='@["ipv6-prefix-assignment"][2]["local-address"].mask' \
 -e route1_target='@["route"][0].target' \
 -e route1_mask='@["route"][0].mask' \
 -e route1_nexthop='@["route"][0].nexthop' \
