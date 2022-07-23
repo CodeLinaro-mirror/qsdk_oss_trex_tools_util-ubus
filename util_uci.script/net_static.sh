@@ -12,9 +12,16 @@
 # gateway	- network gateway
 # dns1		- dns1
 # dns2		- dns2
+# dns3		- dns3
+# dns4		- dns4
+# ip6addr	- network ip6 address
+# ip6gw		- network ip6 gateway
+# ip6prefix	- public prefix routed to this device for distribution to clients
+# ip6ifaceid	- 'eui64', 'random', fixed value like '::1' or '::1:2'
 #
 # example:
 # pre_del=1 interface=wan ifname=eth0 ipaddr=192.168.33.200 netmask=255.255.255.0 gateway=192.168.33.1 mtu=1500 dns1=8.8.8.8 dns2=0.0.0.0 ./net_static.sh
+# pre_del=1 interface=wan6 ifname=eth0 ip6addr=2002::100 ip6gw=2002::1 ip6prefix=2002:0:0:1:: dns1=2001:4860:4860::8888 dns2=2001:4860:4860::8844 ./net_static.sh
 
 if [ -n "$interface" ]; then
 	section=$interface
@@ -41,6 +48,7 @@ echo set network.$section.proto=static >> $tmpfile
 if [ -n "$ifname" ]; then
 	echo set network.$section.ifname=$ifname >> $tmpfile
 fi
+# ipaddr should be list option
 if [ -n "$ipaddr" ]; then
 	echo set network.$section.ipaddr=$ipaddr >> $tmpfile
 fi
@@ -53,12 +61,30 @@ fi
 if [ -n "$gateway" ]; then
 	echo set network.$section.gateway=$gateway >> $tmpfile
 fi
-if [ -n "$dns1" -a -n "$dns2" ]; then
-	echo set network.$section.dns=$dns1 $dns2 >> $tmpfile
-elif [ -n "$dns1" ]; then
-	echo set network.$section.dns=$dns1 >> $tmpfile
-elif [ -n "$dns2" ]; then
-	echo set network.$section.dns=$dns2 >> $tmpfile
+
+# dns is actually a list option, but we use option with multiple value instead as set_list is not supported in util_uci yet
+# ps: it seems list option is backward compatible with option with multiple value
+if [ -n "$dns1" -o -n "$dns2" -o -n "$dns3" -o -n "$dns4" ]; then
+	local str=""
+	[ -n "$dns1" ] && str="$str $dns1"
+	[ -n "$dns2" ] && str="$str $dns2"
+	[ -n "$dns3" ] && str="$str $dns3"
+	[ -n "$dns4" ] && str="$str $dns4"
+	echo "set network.$section.dns='${str# }'" >> $tmpfile
+fi
+
+# ip6addr should be list option
+if [ -n "$ip6addr" ]; then
+	echo set network.$section.ip6addr=$ip6addr >> $tmpfile
+fi
+if [ -n "$ip6gw" ]; then
+	echo set network.$section.ip6gw=$ip6gw >> $tmpfile
+fi
+if [ -n "$ip6prefix" ]; then
+	echo set network.$section.ip6prefix=$ip6prefix >> $tmpfile
+fi
+if [ -n "$ip6ifaceid" ]; then
+	echo set network.$section.ip6ifaceid=$ip6ifaceid >> $tmpfile
 fi
 
 ## dhcp config
