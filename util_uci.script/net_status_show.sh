@@ -29,7 +29,8 @@ net_status_show ()
 	
 	str="[$interface]"
 	[ -n "$device" ] && str="$str dev=$device"
-	[ -n "$l3_device" ] && str="$str l3dev=$l3_device"
+	# show l3_device only if it differs than device
+	[ -n "$l3_device" -a "$device" != "$l3_device" ] && str="$str l3dev=$l3_device"
 	str="$str proto=$proto up=$up auto=$autostart dynamic=$dynamic"
 	[ -n "$uptime" ] && str="$str uptime=$uptime"
 	echo "$str"
@@ -76,10 +77,10 @@ net_status_show ()
 			echo "	route	$str"
 		fi
 	else
-		[ -n "$route1_target" ] && echo "	route	$route1_target/$route1_mask nexhop=$route1_nexthop src=$route1_source"
-		[ -n "$route2_target" ] && echo "	route	$route2_target/$route2_mask nexhop=$route2_nexthop src=$route2_source"
-		[ -n "$route3_target" ] && echo "	route	$route3_target/$route3_mask nexhop=$route3_nexthop src=$route3_source"
-		[ -n "$route4_target" ] && echo "	route	$route4_target/$route4_mask nexhop=$route4_nexthop src=$route4_source"
+		[ -n "$route1_target" ] && echo "	route	$route1_target/$route1_mask nh=$route1_nexthop src=$route1_source"
+		[ -n "$route2_target" ] && echo "	route	$route2_target/$route2_mask nh=$route2_nexthop src=$route2_source"
+		[ -n "$route3_target" ] && echo "	route	$route3_target/$route3_mask nh=$route3_nexthop src=$route3_source"
+		[ -n "$route4_target" ] && echo "	route	$route4_target/$route4_mask nh=$route4_nexthop src=$route4_source"
 	fi
 	
 	if [ -n "$dns1" -o -n "$dns2" -o -n "$dns3" -o -n "$dns4" ]; then
