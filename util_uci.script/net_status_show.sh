@@ -3,7 +3,7 @@ net_status_show ()
 {
 	local up available autostart dynamic
 	local uptime
-	local proto device l3_device ifname
+	local proto device l3_device
 	local ipaddr1_addr ipaddr1_mask ipaddr1_ptpaddr
 	local ipaddr2_addr ipaddr2_mask ipaddr2_ptpaddr
 	local ipaddr3_addr ipaddr3_mask ipaddr3_ptpaddr
@@ -21,7 +21,7 @@ net_status_show ()
 	local route3_target route3_mask route3_nexthop route3_metric route3_valid route3_source 
 	local route4_target route4_mask route4_nexthop route4_metric route4_valid route4_source 
 	local dns1 dns2 dns3 dns4
-	local interface dev_str str
+	local interface str ifname
 
 	interface=$1
 	/usr/sbin/net_status.sh $interface > /tmp/$interface.txt
@@ -35,9 +35,8 @@ net_status_show ()
 	[ -n "$uptime" ] && str="$str uptime=$uptime"
 	echo "$str"
 
-	if [ -n "$ifname" -a "$ifname" != "$device" ]; then
-		echo "	ifname	$ifname"
-	fi
+	ifname=$(echo $(ubus call network.device status |jsonfilter -e "@['$device']['bridge-members'].*"))
+	[ -n "$ifname" ] && echo "	ifname	$ifname"
 	
 	if [ -n "$ipaddr1_addr" -o -n "$ipaddr2_addr" -o -n "$ipaddr3_addr" ]; then
 		str=""
