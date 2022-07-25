@@ -98,3 +98,8 @@ ubus call network.interface.$1 status|jsonfilter \
 |sed -e "s/; export /\n/g" -e "s/;//g" -e "s/^export //" \
 |sed -e "s/='/=/" -e "s/'$//" -e "s/'.$//"
 echo ""
+
+ifname="$(uci get network.$1.ifname 2>/dev/null)"
+[ -n "$ifname" ] && echo "ifname='$ifname'"
+
+exit 0

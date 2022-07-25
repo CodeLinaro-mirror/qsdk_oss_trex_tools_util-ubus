@@ -3,7 +3,7 @@ net_status_show ()
 {
 	local up available autostart dynamic
 	local uptime
-	local proto device l3_device
+	local proto device l3_device ifname
 	local ipaddr1_addr ipaddr1_mask ipaddr1_ptpaddr
 	local ipaddr2_addr ipaddr2_mask ipaddr2_ptpaddr
 	local ipaddr3_addr ipaddr3_mask ipaddr3_ptpaddr
@@ -30,10 +30,14 @@ net_status_show ()
 	str="[$interface]"
 	[ -n "$device" ] && str="$str dev=$device"
 	# show l3_device only if it differs than device
-	[ -n "$l3_device" -a "$device" != "$l3_device" ] && str="$str l3dev=$l3_device"
+	[ -n "$l3_device" -a "$l3_device" != "$device" ] && str="$str l3dev=$l3_device"
 	str="$str proto=$proto up=$up auto=$autostart dynamic=$dynamic"
 	[ -n "$uptime" ] && str="$str uptime=$uptime"
 	echo "$str"
+
+	if [ -n "$ifname" -a "$ifname" != "$device" ]; then
+		echo "	ifname	$ifname"
+	fi
 	
 	if [ -n "$ipaddr1_addr" -o -n "$ipaddr2_addr" -o -n "$ipaddr3_addr" ]; then
 		str=""
