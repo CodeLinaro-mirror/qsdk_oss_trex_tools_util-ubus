@@ -56,9 +56,10 @@ add     <config> <section>
 set     <config>.<section>[.<option>]=<value>
 get     <config>.<section>[.<option>]
 del     <config>.<section>[.<option>]
+add_list <config>.<section>.<option>=<value1> <value2> <value3>
 changes <config>
 commit  [<config>]
-restart
+restart [lan | wan]
 
 ex1:
 /usr/bin/util_uci << EOF

@@ -29,6 +29,7 @@ enum uci_command {
     UCI_CMD_SET,
     UCI_CMD_DEL,
     UCI_CMD_GET,
+    UCI_CMD_ADDLIST,
     UCI_CMD_CHANGES,
     UCI_CMD_COMMIT,
     UCI_CMD_RESTART,
@@ -137,6 +138,7 @@ int uci_line_parser(char *input_line, UCI_LINE *line)
         case UCI_CMD_SET:
         case UCI_CMD_DEL:
         case UCI_CMD_GET:
+        case UCI_CMD_ADDLIST:
             pt=strtok(NULL, ".");
             break;
         default:
@@ -171,8 +173,32 @@ int uci_cmd_add(UCI_LINE *line)
     dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
     return ret;
 }
+
+int uci_cmd_addlist(UCI_LINE *line)
+{
+    int ret,cnt=0;
+    char *strpt=NULL;
+    char *arr_value[16];
+
+    strpt=strtok(line->value," ");
+    while(strpt != NULL)
+    {
+        arr_value[cnt]=strpt;
+        cnt++;
+        if(cnt >= 16)   break;
+        strpt=strtok(NULL," ");
+    }
+    if(line->option)
+        ret = util_ubus_uci_set_list(line->package, line->section, line->option, arr_value, cnt);
+    else
+        ret=UBUS_STATUS_NOT_FOUND;
+    dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
+    return ret;
+}
+
 int uci_cmd_set(UCI_LINE *line)
-{   int ret;
+{
+    int ret;
     if(line->option)
         ret = util_ubus_uci_set(line->package, line->section, line->option, line->value);
     else
@@ -263,6 +289,7 @@ uci_dispatchTable uci_cmd_dispatch[] = {
         [UCI_CMD_SET] = { "set", uci_cmd_set },
         [UCI_CMD_DEL] = { "del", uci_cmd_del },
         [UCI_CMD_GET] = { "get", uci_cmd_get },
+        [UCI_CMD_ADDLIST] = { "add_list", uci_cmd_addlist },
         [UCI_CMD_CHANGES] = { "changes", uci_cmd_changes },
         [UCI_CMD_COMMIT] = { "commit", uci_cmd_commit },
         [UCI_CMD_RESTART] = { "restart", uci_cmd_restart }
@@ -367,7 +394,7 @@ int main(int argc, char *argv[])
 
         if ( lineSize == 1 )
             dbprintf_wanif("char =%x\n", line[0]);
-        else if ( lineSize > 1 )
+        else if ( lineSize > 1 && line[0] != '#')
         {
             uci_line_parser(line, &uci_line);
             if(dbg_level) uci_line_dump(&uci_line);

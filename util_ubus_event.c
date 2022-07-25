@@ -12,10 +12,10 @@ int dbg_level=0;
 static struct ubus_context * ctx = NULL;
 static const char * cli_path;
 static int shutdown=0,trap_mode=-1,fake_mode=-1;
-static char ifname[16]={0};
+static char ifname[16]={0}, script_name[256]={0};
  
 #define	UBUS_EVENT_CTL	"util_ubus_event"
-#define	UBUS_EVENT_REMOVE_DEVICE	"rm_device"
+//#define	UBUS_EVENT_REMOVE_DEVICE	"rm_device"
 #define UBUS_EVENT_ALL    "*"
 #define UBUS_EVENT_NETWORK    "network.interface"
 
@@ -32,8 +32,8 @@ static void shell_timer(struct uloop_timeout *timeout)
         char cmd[128]={0};
         if(trap_mode != -1 || fake_mode!=-1 )
         {
-                snprintf(cmd, 127, "ifname=%s trap_mode=%d fake_mode=%d set_igmp_route.sh",
-                                ifname, trap_mode, fake_mode);
+                snprintf(cmd, 127, "ifname=%s trap_mode=%d fake_mode=%d %s",
+                                ifname, trap_mode, fake_mode,script_name);
                 dbprintf("call script: %s\n", cmd);
                 system(cmd);
         }
@@ -131,9 +131,11 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
                         if ( shutdown )
                                 uloop_timeout_set(&timer_shutdown,timer_delay * 1000);
                 }
-                ubus_get_objstr(msg, "ifname", ifname, sizeof(ifname));
+                ubus_get_objstr(msg, "script", script_name, sizeof(script_name)-1);
+                ubus_get_objstr(msg, "ifname", ifname, sizeof(ifname)-1);
                 ubus_get_objint(msg, "trap_mode", &trap_mode);
                 ubus_get_objint(msg, "fake_mode", &fake_mode);
+                ubus_get_objint(msg, "dbg_level", &dbg_level);
         }
         else if ( strncmp(type, UBUS_EVENT_NETWORK, strlen(UBUS_EVENT_NETWORK)) == 0 )
         {
@@ -257,6 +259,7 @@ int main(int argc, char * argv[])
         }
         //init variable
         strcpy(ifname,"eth4");
+        strcpy(script_name,"set_igmp_route.sh");
         trap_mode=-1;
         fake_mode=-1;
         client_ubus_register_events();

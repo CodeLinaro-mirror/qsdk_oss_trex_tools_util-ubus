@@ -1,0 +1,22 @@
+timer_delay : delay n second to execute action ( such as shutdown , run script )
+shutdown : set 1 to exit program after timer_delay
+ifname : device name for set_igmp_route.sh
+trap_mode : trap mode value for set_igmp_route.sh
+fake_mode : fake mode value for set_igmp_route.sh
+script_name : script file name, default : "set_igmp_route.sh"
+dbg_level : enable/disable debug message
+
+* How to setup variable value :
+ubus send util_ubus_event '{"set_delay":5,"shutdown":1}'	--> Exit program after 5 second
+ubus send "util_ubus_event" "{\"ifname\":\"eth4\",\"trap_mode\":1,\"fake_mode\":0}"  --> set ifname,trap_mode,fake_mode
+ubus send "util_ubus_event" "{\"script\":\"/usr/bin/set_igmp_route.sh\"}"
+
+* How to turn on debug message :
+UTIL_DBG=1 util_ubus_event &
+
+* What event monitor by program:
+util_ubus_event , network.interface
+
+* What action with network.interface event:
+{ "network.interface": {"action":"ifup","interface":"lan"} }  -->  run script "set_igmp_route.sh" after timer_delay when event is detected
+
