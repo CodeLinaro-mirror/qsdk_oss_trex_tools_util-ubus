@@ -24,8 +24,9 @@ net_status_show ()
 	local interface str ifname
 
 	interface=$1
-	/usr/sbin/net_status.sh $interface > /tmp/$interface.txt
-	. /tmp/$interface.txt
+	/usr/sbin/net_status.sh $interface > /var/run/$interface.tmp.$$
+	. /var/run/$interface.tmp.$$
+	rm . /var/run/$interface.tmp.$$
 	
 	str="[$interface]"
 	[ -n "$device" ] && str="$str dev=$device"
