@@ -5,6 +5,7 @@
 # interface	- network section name
 # disabled	- disable network
 # auto		- bring up on boot
+# defaultroute	- use nexthop as system defaultroute
 # ifname	- network device name
 # mtu		- mtu
 # 
@@ -30,6 +31,10 @@ fi
 # whether to bring up interface on boot
 if [ -n "$auto" ]; then
 	echo set network.$section.auto=$auto >> $tmpfile
+fi
+# whether set remote nexthop as the system defaultroute
+if [ -n "$defaultroute" ]; then
+	echo set network.$section.defaultroute=$defaultroute >> $tmpfile
 fi
 
 echo set network.$section.proto=dhcpv6 >> $tmpfile

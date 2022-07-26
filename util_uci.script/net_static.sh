@@ -5,6 +5,7 @@
 # interface   	- network section name
 # disabled	- disable network
 # auto		- bring up on boot
+# defaultroute	- use nexthop as system defaultroute
 # ifname	- network device name
 # ipaddr	- network ip address
 # netmask	- network netmask
@@ -42,6 +43,10 @@ fi
 # whether to bring up interface on boot
 if [ -n "$auto" ]; then
 	echo set network.$section.auto=$auto >> $tmpfile
+fi
+# whether set nexthop as the system defaultroute
+if [ -n "$defaultroute" ]; then
+	echo set network.$section.defaultroute=$defaultroute >> $tmpfile
 fi
 
 echo set network.$section.proto=static >> $tmpfile
