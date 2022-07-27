@@ -92,14 +92,20 @@ if [ -n "$ip6ifaceid" ]; then
 	echo set network.$section.ip6ifaceid=$ip6ifaceid >> $tmpfile
 fi
 
-## dhcp config
+## disable dhcp server on interface
 echo del dhcp.$section >> $tmpfile
 echo set dhcp.$section=dhcp >> $tmpfile
 echo set dhcp.$section.interface=$section >> $tmpfile
 echo set dhcp.$section.ignore=1 >> $tmpfile
+## add interface to firewall zone wan
+iflist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
+if ! echo "$iflist"|grep -qw $interface; then
+	echo set_list firewall.@zone[1].network=$iflist $interface >> $tmpfile
+	echo commit firewall >> $tmpfile
+fi
 
-echo commit network>> $tmpfile
-echo commit dhcp>> $tmpfile
+echo commit network >> $tmpfile
+echo commit dhcp >> $tmpfile
 #echo restart >> $tmpfile
 /usr/bin/util_uci -f $tmpfile
 rm $tmpfile
