@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "util_ubus.h"
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
+
+#include "util_ubus.h"
+
 #define UCI_LINE_DEF
 #define dbprintf_wanif(fmt, args...)      do { if(dbg_level) fprintf(stderr,"%s:%d: %s(): " fmt, util_purename(__FILE__), __LINE__, __FUNCTION__, ##args); } while (0)
 
@@ -264,7 +266,7 @@ uci_cmd_restart(UCI_LINE * line)
 	char cmd[64] = { 0 };
 	if (line->package) {
 		snprintf(cmd, 63, "ifdown %s", line->package);
-		system(cmd);
+		ret = system(cmd);
 		sleep(1);
 		snprintf(cmd, 63, "ifup %s", line->package);
 		ret = system(cmd);
@@ -318,27 +320,27 @@ uci_run(UCI_LINE * line)
 void
 print_help(void)
 {
-	printf("util_uci: a uci like tool that uses rpcd session for config access
-supported cmd:
-add      <config> <section>
-set      <config>.<section>[.<option>]=<value>
-get      <config>.<section>[.<option>]
-del      <config>.<section>[.<option>]
-set_list <config>.<section>.<option>=<value1> <value2> <value3>
-changes  <config>
-commit  [<config>]
-restart [lan | wan]
-
-syntax:
-util_uci [rdonly cmds...]
-util_uci [-f filename]
-util_uci << EOF
-...
-EOF
-
-ps: commit is required for write cmds, so -f or stdin should be used
-    setting env UTIL_DBG to 1 will enable debug msg in detail
-");
+	printf("util_uci: a uci like tool that uses rpcd session for config access"
+		"supported cmd:\n"
+		"add      <config> <section>\n"
+		"set      <config>.<section>[.<option>]=<value>\n"
+		"get      <config>.<section>[.<option>]\n"
+		"del      <config>.<section>[.<option>]\n"
+		"set_list <config>.<section>.<option>=<value1> <value2> <value3>\n"
+		"changes  <config>\n"
+		"commit  [<config>]\n"
+		"restart [lan | wan]\n"
+		"\n"
+		"syntax:\n"
+		"util_uci [rdonly cmds...]\n"
+		"util_uci [-f filename]\n"
+		"util_uci << EOF\n"
+		"...\n"
+		"EOF\n"
+		"\n"
+		"ps: commit is required for write cmds, so -f or stdin should be used\n"
+		"    setting env UTIL_DBG to 1 will enable debug msg in detail\n");
+}
 
 int
 main(int argc, char *argv[])
