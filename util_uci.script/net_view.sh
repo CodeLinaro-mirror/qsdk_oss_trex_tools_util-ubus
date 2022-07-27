@@ -1,5 +1,5 @@
 #!/bin/sh
-net_status_show ()
+net_view ()
 {
 	local up available autostart dynamic
 	local uptime
@@ -24,8 +24,8 @@ net_status_show ()
 	local interface str ifname
 
 	interface=$1
-	/usr/sbin/net_status.sh $interface > /var/run/$interface.tmp.$$
-	. /var/run/$interface.tmp.$$; rm /var/run/$interface.tmp.$$
+	/usr/sbin/net_kv.sh $interface > /var/run/$interface.kv.$$
+	. /var/run/$interface.kv.$$; rm /var/run/$interface.kv.$$
 	
 	str="[$interface]"
 	[ -n "$device" ] && str="$str dev=$device"
@@ -99,8 +99,8 @@ net_status_show ()
 list="$(ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface')"
 for inf in $list; do
 	if [ -z "$1" ]; then
-		net_status_show $inf
+		net_view $inf
 	elif echo $inf | grep -q "$1"; then
-		net_status_show $inf
+		net_view $inf
 	fi
 done
