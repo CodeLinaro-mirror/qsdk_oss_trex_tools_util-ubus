@@ -68,6 +68,6 @@ echo set dhcp.$section.ignore='1' >> $tmpfile
 
 echo commit network >> $tmpfile
 echo commit dhcp >> $tmpfile
-echo restart >> $tmpfile
+#echo restart >> $tmpfile
 /usr/bin/util_uci -f $tmpfile
 rm $tmpfile

@@ -57,6 +57,6 @@ else
 fi
 
 echo commit network >> $tmpfile
-echo restart >> $tmpfile
+#echo restart >> $tmpfile
 /usr/bin/util_uci -f $tmpfile
 rm -f $tmpfile
