@@ -28,7 +28,7 @@ enum uci_command {
 	UCI_CMD_SET,
 	UCI_CMD_DEL,
 	UCI_CMD_GET,
-	UCI_CMD_ADDLIST,
+	UCI_CMD_SETLIST,
 	UCI_CMD_CHANGES,
 	UCI_CMD_COMMIT,
 	UCI_CMD_RESTART,
@@ -131,7 +131,7 @@ uci_line_parser(char *input_line, UCI_LINE * line)
 	case UCI_CMD_SET:
 	case UCI_CMD_DEL:
 	case UCI_CMD_GET:
-	case UCI_CMD_ADDLIST:
+	case UCI_CMD_SETLIST:
 		pt = strtok(NULL, ".");
 		break;
 	default:
@@ -166,7 +166,7 @@ uci_cmd_add(UCI_LINE * line)
 }
 
 int
-uci_cmd_addlist(UCI_LINE * line)
+uci_cmd_setlist(UCI_LINE * line)
 {
 	int ret, cnt = 0;
 	char *strpt = NULL;
@@ -286,7 +286,7 @@ uci_dispatchTable uci_cmd_dispatch[] = {
 	[UCI_CMD_SET] = { "set", uci_cmd_set },
 	[UCI_CMD_DEL] = { "del", uci_cmd_del },
 	[UCI_CMD_GET] = { "get", uci_cmd_get },
-	[UCI_CMD_ADDLIST] = { "add_list", uci_cmd_addlist },
+	[UCI_CMD_SETLIST] = { "set_list", uci_cmd_setlist },
 	[UCI_CMD_CHANGES] = { "changes", uci_cmd_changes },
 	[UCI_CMD_COMMIT] = { "commit", uci_cmd_commit },
 	[UCI_CMD_RESTART] = { "restart", uci_cmd_restart }
@@ -314,6 +314,31 @@ uci_run(UCI_LINE * line)
 		printf("uci command not found!\n");
 	return ret;
 }
+
+void
+print_help(void)
+{
+	printf("util_uci: a uci like tool that uses rpcd session for config access
+supported cmd:
+add      <config> <section>
+set      <config>.<section>[.<option>]=<value>
+get      <config>.<section>[.<option>]
+del      <config>.<section>[.<option>]
+set_list <config>.<section>.<option>=<value1> <value2> <value3>
+changes  <config>
+commit  [<config>]
+restart [lan | wan]
+
+syntax:
+util_uci [rdonly cmds...]
+util_uci [-f filename]
+util_uci << EOF
+...
+EOF
+
+ps: commit is required for write cmds, so -f or stdin should be used
+    setting env UTIL_DBG to 1 will enable debug msg in detail
+");
 
 int
 main(int argc, char *argv[])
@@ -345,7 +370,10 @@ main(int argc, char *argv[])
 	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 
 	if (argc > 1) {
-		if (strncmp(argv[1], "-f", 2) == 0) {
+		if (strncmp(argv[1], "-h", 2) == 0 || strncmp(argv[1], "-?", 2) == 0) {
+			print_help();
+			return 0;
+		} else if (strncmp(argv[1], "-f", 2) == 0) {
 			if (argc > 2) {
 				if (!(input = fopen(argv[2], "r"))) {
 					printf("open %s error!\n", argv[2]);

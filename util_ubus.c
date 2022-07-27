@@ -595,7 +595,7 @@ util_ubus_uci_set(char *config, char *section, char *option, char *value)
 	}
 
 	if ((ret = ubus_invoke(ubus_ctx, ubus_path_id, "set", b.head, util_ubus_uci_set_cb, NULL, ubus_invoke_timeout * 1000)) != 0)
-		printf("uci:%s\n", util_ubus_error_str(ret));
+		dbprintf("ubus_invoke session::set error %d(%s)\n", ret, util_ubus_error_str(ret));
 	blob_buf_free(&b);
 	return ret;
 }
@@ -634,7 +634,7 @@ util_ubus_uci_set_list(char *config, char *section, char *option, char *array[],
 	}
 
 	if ((ret = ubus_invoke(ubus_ctx, ubus_path_id, "set", b.head, util_ubus_uci_set_cb, NULL, ubus_invoke_timeout * 1000)) != 0)
-		printf("uci:%s\n", util_ubus_error_str(ret));
+		dbprintf("ubus_invoke session::set error %d(%s)\n", ret, util_ubus_error_str(ret));
 	blob_buf_free(&b);
 	return ret;
 }
