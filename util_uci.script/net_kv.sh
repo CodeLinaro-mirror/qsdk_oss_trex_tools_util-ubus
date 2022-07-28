@@ -14,7 +14,7 @@
 # dns[1-4]
 # 
 if [ -z "$1" ]; then
-	echo $0 [openwrt_inf_name]
+	echo "$0 <openwrt_inf_name>"
 	ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface'
 	exit 1
 fi

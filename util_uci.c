@@ -320,7 +320,14 @@ uci_run(UCI_LINE * line)
 void
 print_help(void)
 {
-	printf("util_uci: a uci like tool that uses rpcd session for config access"
+	printf("util_uci: a uci like tool that uses rpcd session for config access\n\n"
+		"syntax:\n"
+		"util_uci [rdonly cmds...]\n"
+		"util_uci [-f <filename>]\n"
+		"util_uci << EOF\n"
+		"...\n"
+		"EOF\n"
+		"\n"
 		"supported cmd:\n"
 		"add      <config> <section>\n"
 		"set      <config>.<section>[.<option>]=<value>\n"
@@ -330,13 +337,6 @@ print_help(void)
 		"changes  <config>\n"
 		"commit  [<config>]\n"
 		"restart [lan | wan]\n"
-		"\n"
-		"syntax:\n"
-		"util_uci [rdonly cmds...]\n"
-		"util_uci [-f filename]\n"
-		"util_uci << EOF\n"
-		"...\n"
-		"EOF\n"
 		"\n"
 		"ps: commit is required for write cmds, so -f or stdin should be used\n"
 		"    setting env UTIL_DBG to 1 will enable debug msg in detail\n");

@@ -1,43 +1,63 @@
 #!/bin/sh
+# remove interface from /etc/config/(network|dhcp|firewall)
+# the interface instance in mem is automatically removed when network.interface is removed
 
-# parameter:
-# pre_del	- delete old network setting
-# interface	- network section name
-# disabled	- disable network
-# auto		- bring up on boot
-# defaultroute	- use nexthop as system defaultroute
-# ifname	- network device name
-# mtu		- mtu
-# 
-# example:
-# pre_del=1 interface=wan ifname=eth0 ./net_dhcp.sh
+remove_name_from_list() {
+	local name=$1; shift
+	local str=""
+	for listname in $*; do
+		if [ "$listname" != "$name" ]; then
+			str="$str $listname"
+		fi
+	done
+	echo ${str# }
+}
 
 if [ -z "$1" ]; then
-	echo $0 [openwrt_inf_to_del]
+	echo "$0 <openwrt_inf...>"
 	ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface'
 	exit 1
 fi
 
-interface=$1
-tmpfile=/var/run/net_del.$interface.$$
+iflist="$*"
+tmpfile=/var/run/net_del.$$
+echo "" > $tmpfile
 
 ## del interface
-echo del network.$interface > $tmpfile
-
-## del dhcp server config for interface
-echo del dhcp.$interface >> $tmpfile
-
-## del interface from firewall zone wan
-iflist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
-iflist2=""
 for ifname in $iflist; do
-	if [ "$ifname" != "$interface" ]; then
-		iflist2="$iflist2 $ifname"
-	fi
-	echo "set_list firewall.@zone[1].network=${iflist2# }" >> $tmpfile
-	echo commit firewall >> $tmpfile
+	echo del network.$ifname >> $tmpfile
 done
 
+## del dhcp server config for interface
+for ifname in $iflist; do
+	echo del dhcp.$ifname >> $tmpfile
+done
+
+## del interface from firewall zone wan
+wanlist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
+for ifname in $iflist; do
+	wanlist2=$(remove_name_from_list $ifname $wanlist)
+	wanlist="$wanlist2"
+done
+if [ -n "$wanlist" ]; then
+	echo "set_list firewall.@zone[1].network=$wanlist" >> $tmpfile
+else
+	echo "del firewall.@zone[1].network" >> $tmpfile
+fi
+
+## del interface from firewall zone lan
+lanlist=$(util_uci get firewall.@zone[0].network|cut -d= -f2)
+for ifname in $iflist; do
+	lanlist2=$(remove_name_from_list $ifname $lanlist)
+	lanlist="$lanlist2"
+done
+if [ -n "$lanlist" ]; then
+	echo "set_list firewall.@zone[0].network=$lanlist" >> $tmpfile
+else
+	echo "del firewall.@zone[0].network" >> $tmpfile
+fi
+
+echo commit firewall >> $tmpfile
 echo commit network >> $tmpfile
 echo commit dhcp >> $tmpfile
 #echo restart >> $tmpfile
