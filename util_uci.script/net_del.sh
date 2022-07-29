@@ -36,7 +36,7 @@ done
 ## del dhcp server config for interface
 for ifname in $iflist; do
 	# do not remove dhcp config for lan, as lan contains default dhcp setting for nat subnet
-	[ "$iflist" != "lan" ] && echo del dhcp.$ifname >> $tmpfile
+	[ "$ifname" != "lan" ] && echo del dhcp.$ifname >> $tmpfile
 done
 
 ## del interface from firewall zone wan
