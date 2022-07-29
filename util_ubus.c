@@ -609,6 +609,9 @@ util_ubus_uci_set_list(char *config, char *section, char *option, char *array[],
 
 	if (!config || !section || !option || !array)
 		return UTIL_UBUS_ERROR_NULL_POINTER;
+	// uci_set_list wont allow array_size == 0, use uci_delete instead
+	if (array_size == 0)
+		return util_ubus_uci_delete(config, NULL, section, option);
 
 	memset(&b, 0, sizeof(b));	// must! or blob_buf_init would segfault
 	blob_buf_init(&b, 0);
