@@ -15,7 +15,12 @@ remove_name_from_list() {
 
 if [ -z "$1" ]; then
 	echo "$0 <openwrt_inf...>"
-	ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface'
+	iflist=$(ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface')
+	set $(ubus call network.interface dump |  jsonfilter -e '@.interface[@].device')
+	for ifname in $iflist; do
+		devname=$1; shift
+		printf "%-15s\t%s\n" "$ifname" "($devname)"
+	done
 	exit 1
 fi
 

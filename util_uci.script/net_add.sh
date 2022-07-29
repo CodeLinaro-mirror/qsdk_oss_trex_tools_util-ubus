@@ -1,56 +1,5 @@
 #!/bin/sh
 
-# common parameter:
-# pre_del 	- delete old network setting
-# interface   	- network section name
-# disabled	- disable network
-# auto		- bring up on boot
-
-# static parameter:
-# ifname	- network device name
-# defaultroute	- use nexthop as system defaultroute
-# mtu		- mtu
-# ipaddr	- network ip address
-# netmask	- network netmask
-# gateway	- network gateway
-# dns[1-4]	- dns
-# ip6addr	- network ip6 address
-# ip6gw		- network ip6 gateway
-# ip6prefix	- public prefix routed to this device for distribution to clients
-# ip6ifaceid	- 'eui64', 'random', fixed value like '::1' or '::1:2'
-
-# dhcp/dhcpv6 parameter:
-# defaultroute	- use nexthop as system defaultroute
-# ifname	- network device name
-# mtu		- mtu
-# defaultroute	- use nexthop as system defaultroute
-
-# pppoe parameter :
-# ifname	- network device name
-# mtu		- mtu
-# defaultroute	- use nexthop as system defaultroute
-# username	- pppoe username
-# passwd	- pppoe password
-# ipv6		- nego ipv6 within ppp, possible value: 0, 1, auto(default)
-
-# pptp parameter :
-# ifname	- network device name
-# mtu		- mtu
-# server	- pptp server
-# username	- pptp username
-# passwd	- pptp password
-# ipv6		- nego ipv6 within pptp, possible value: 0, 1, auto(default)
-
-# bridge parameter:
-# pre_del	- delete old network setting
-# interface	- network section name
-# disabled	- disable network
-# auto		- bring up on boot
-# ifname	- network device name
-# ipaddr	- network ip address
-# netmask	- network netmask
-# gateway	- network gateway
-
 add_static() {
 	echo set network.$interface.proto=static >> $tmpfile
 	[ -n "$ifname" ]	&& echo set network.$interface.ifname=$ifname >> $tmpfile
@@ -130,30 +79,108 @@ add_bridge() {
 	[ -n "$gateway" ]	&& echo set network.$interface.gateway=$gateway >> $tmpfile
 }
 
+help_usage() {
+	echo "common parameter:"
+	echo "pre_del 	- delete old network setting"
+	echo "disabled	- disable network"
+	echo "auto		- bring up on boot"
+	echo ""
+
+	if [ "$proto" = "static" ]; then
+		echo "static parameter:"
+		echo "ifname		- network device name"
+		echo "defaultroute	- use nexthop as system defaultroute"
+		echo "mtu		- mtu"
+		echo "ipaddr		- network ip address"
+		echo "netmask		- network netmask"
+		echo "gateway		- network gateway"
+		echo "dns[1-4]	- dns"
+		echo "ip6addr		- network ip6 address"
+		echo "ip6gw		- network ip6 gateway"
+		echo "ip6prefix	- public prefix routed to this device for distribution to clients"
+		echo "ip6ifaceid	- 'eui64', 'random', fixed value like '::1' or '::1:2'"
+		echo ""
+		echo "example:"
+		echo "pre_del=1 ifname=eth0 ipaddr=172.16.3.200 netmask=255.255.0.0 gateway=172.16.3.1 mtu=1500 dns1=8.8.8.8 /usr/sbin/net_add.sh static wan0"
+		echo "pre_del=1 ifname=eth0 ip6addr=2002::100 ip6gw=2002::1 ip6prefix=2002:0:0:1:: dns1=2001:4860:4860::8888 /usr/sbin/net_add.sh static wan0v6"
+		echo ""
+
+	elif [ "$proto" = "dhcp" -o "$proto" = "dhcpv6" ]; then
+		echo "dhcp/dhcpv6 parameter:"
+		echo "defaultroute	- use nexthop as system defaultroute"
+		echo "ifname		- network device name"
+		echo "mtu		- mtu"
+		echo "defaultroute	- use nexthop as system defaultroute"
+		echo ""
+		echo "example:"
+		echo "pre_del=1 ifname=eth0 /usr/sbin/net_add.sh dhcp wan0"
+		echo "pre_del=1 ifname=eth0 /usr/sbin/net_add.sh dhcpv6 wan0v6"
+		echo ""
+
+	elif [ "$proto" = "pppoe" ]; then
+		echo "pppoe parameter:"
+		echo "ifname		- network device name"
+		echo "mtu		- mtu"
+		echo "defaultroute	- use nexthop as system defaultroute"
+		echo "username	- pppoe username"
+		echo "passwd		- pppoe password"
+		echo "ipv6		- nego ipv6 within ppp, possible value: 0, 1, auto(default)"
+		echo ""
+		echo "example:"
+		echo "pre_del=1 ifname=eth0 username=test passwd=12345678 /usr/sbin/net_add.sh pppoe wan0"
+		echo ""
+
+	elif [ "$proto" = "pptp" ]; then
+		echo "pptp parameter:"
+		echo "ifname		- network device name"
+		echo "mtu		- mtu"
+		echo "server		- pptp server"
+		echo "username	- pptp username"
+		echo "passwd		- pptp password"
+		echo "ipv6		- nego ipv6 within pptp, possible value: 0, 1, auto(default)"
+		echo ""
+		echo "example:"
+		echo "pre_del=1 ifname=eth0 server=your_pptp_server username=test passwd=12345678 /usr/sbin/net_add.sh pptp vpn0"
+		echo ""
+
+	elif [ "$proto" = "bridge" ]; then
+		echo "bridge parameter:"
+		echo "ifname		- network device name"
+		echo "ipaddr		- network ip address"
+		echo "netmask		- network netmask"
+		echo "gateway		- network gateway"
+		echo ""
+		echo "example:"
+		echo "pre_del=1 ifname='eth0.2.0 eth0.3.0 eth0.4.0 eth0.5.0' ipaddr=192.168.1.1 netmask=255.255.255.0 /usr/sbin/net_add.sh bridge lan"
+		echo ""
+	fi
+}
+help_short() {
+	echo "$0 <proto> <openwrt_inf_name>"
+	echo "$0 <proto> - show help"
+	echo ""
+	echo "available proto: static, dhcp, dhcpv6, pppoe, pptp, bridge"
+	echo ""
+}
+
 ## main #####################################################################
 
-if [ -z "$2" ]; then
-	echo "$0 <proto> <openwrt_inf_name>"
-	echo "ps: proto supported: static, dhcp, dhcpv6, pppoe, pptp, bridge"
-	echo ""
-	echo "example:"
-	echo "pre_del=1 ifname=eth0 ipaddr=172.16.3.200 netmask=255.255.0.0 gateway=172.16.3.1 mtu=1500 dns1=8.8.8.8 /usr/sbin/net_add.sh static wan0"
-	echo "pre_del=1 ifname=eth0 ip6addr=2002::100 ip6gw=2002::1 ip6prefix=2002:0:0:1:: dns1=2001:4860:4860::8888 /usr/sbin/net_add.sh static wan0v6"
-	echo "pre_del=1 ifname=eth0 /usr/sbin/net_add.sh dhcp wan0"
-	echo "pre_del=1 ifname=eth0 /usr/sbin/net_add.sh dhcpv6 wan0v6"
-	echo "pre_del=1 ifname=eth0 username=test passwd=12345678 /usr/sbin/net_add.sh pppoe wan0"
-	echo "pre_del=1 ifname=eth0 server=your_pptp_server username=test passwd=12345678 /usr/sbin/net_add.sh pptp vpn0"
-	echo "pre_del=1 ifname='eth0.2.0 eth0.3.0 eth0.4.0 eth0.5.0' ipaddr=192.168.1.1 netmask=255.255.255.0 /usr/sbin/net_add.sh bridge lan"
+if [ -z "$1" ]; then
+	help_short
 	exit 1
 fi
 
 proto=$1
-interface=$2
 case $proto in
-	static|dhcp|dhcpv6|pppoe|pptp) ;;
-	bridge) ;;
-	*) echo "invalid proto $proto"; exit 1;;
+	static|dhcp|dhcpv6|pppoe|pptp|bridge) ;;
+	*) help_short; exit 1;;
 esac
+
+interface=$2
+if [ -z "$interface" ]; then
+	help_usage
+	exit 0
+fi
 
 tmpfile=/var/run/net_add.$interface.$$
 echo "" > $tmpfile
@@ -180,12 +207,12 @@ if [ "$proto" = "bridge" ]; then
 		echo commit firewall >> $tmpfile
 	fi
 else
-	## disable dhcp server on interface
+	## disable dhcp server on wan interface
 	echo del dhcp.$interface >> $tmpfile
 	echo set dhcp.$interface=dhcp >> $tmpfile
 	echo set dhcp.$interface.interface=$interface >> $tmpfile
 	echo set dhcp.$interface.ignore=1 >> $tmpfile
-	## add interface to firewall zone[1] - wan
+	## add wan interface to firewall zone[1] (zone wan)
 	iflist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
 	if ! echo "$iflist"|grep -qw $interface; then
 		echo set_list firewall.@zone[1].network=$iflist $interface >> $tmpfile
