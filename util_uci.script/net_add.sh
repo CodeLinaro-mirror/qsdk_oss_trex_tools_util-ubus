@@ -187,7 +187,7 @@ echo "" > $tmpfile
 
 [ -n "$pre_del" ]	&& echo del network.$interface > $tmpfile
 echo set network.$interface=interface >> $tmpfile
-[ -n "$disabled" ]	&& echo set network.$interface.disable=$disabled >> $tmpfile
+[ -n "$disabled" ]	&& echo set network.$interface.disabled=$disabled >> $tmpfile
 [ -n "$auto" ] 		&& echo set network.$interface.auto=$auto >> $tmpfile	# bring up on boot
 
 case $proto in
