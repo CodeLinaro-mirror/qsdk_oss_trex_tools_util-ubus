@@ -17,7 +17,7 @@ add_static() {
 		[ -n "$dns2" ] && str="$str $dns2"
 		[ -n "$dns3" ] && str="$str $dns3"
 		[ -n "$dns4" ] && str="$str $dns4"
-		echo "set network.$interface.dns='${str# }'" >> $tmpfile
+		echo "set network.$interface.dns=${str# }" >> $tmpfile
 	fi
 
 	[ -n "$ip6addr" ]	&& echo set network.$interface.ip6addr=$ip6addr >> $tmpfile	# should be list option?
@@ -79,11 +79,18 @@ add_bridge() {
 	[ -n "$gateway" ]	&& echo set network.$interface.gateway=$gateway >> $tmpfile
 }
 
+add_none() {
+	echo set network.$interface.proto=none >> $tmpfile
+	[ -n "$ifname" ]	&& echo set network.$interface.ifname=$ifname >> $tmpfile
+}
+
 help_usage() {
 	echo "common parameter:"
 	echo "pre_del 	- delete old network setting"
 	echo "disabled	- disable network"
 	echo "auto		- bring up on boot"
+	echo "nocommit	- no commit command"
+	echo "restart	- restart network"
 	echo ""
 
 	if [ "$proto" = "static" ]; then
@@ -172,7 +179,7 @@ fi
 
 proto=$1
 case $proto in
-	static|dhcp|dhcpv6|pppoe|pptp|bridge) ;;
+	static|dhcp|dhcpv6|pppoe|pptp|bridge|none) ;;
 	*) help_short; exit 1;;
 esac
 
@@ -197,6 +204,7 @@ case $proto in
 	pppoe)	add_pppoe;;
 	pptp)	add_pptp;;
 	bridge) add_bridge;;
+	none)	add_none;;
 esac
 
 if [ "$proto" = "bridge" ]; then
@@ -213,14 +221,20 @@ else
 	echo set dhcp.$interface.interface=$interface >> $tmpfile
 	echo set dhcp.$interface.ignore=1 >> $tmpfile
 	## add wan interface to firewall zone[1] (zone wan)
-	iflist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
-	if ! echo "$iflist"|grep -qw $interface; then
-		echo set_list firewall.@zone[1].network=$iflist $interface >> $tmpfile
-		echo commit firewall >> $tmpfile
+	if [ "$proto" != "none" ]; then
+		iflist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
+		if ! echo "$iflist"|grep -qw $interface; then
+			echo set_list firewall.@zone[1].network=$iflist $interface >> $tmpfile
+			echo commit firewall >> $tmpfile
+		fi
 	fi
 fi
-echo commit network >> $tmpfile
-echo commit dhcp >> $tmpfile
-#echo restart >> $tmpfile
+if [ -z "$nocommit" ] || [ "$nocommit" = "0" ]; then
+	echo commit network >> $tmpfile
+	echo commit dhcp >> $tmpfile
+fi
+if [ "$restart" = "1" ]; then
+	echo restart >> $tmpfile
+fi
 /usr/bin/util_uci -f $tmpfile
 rm $tmpfile

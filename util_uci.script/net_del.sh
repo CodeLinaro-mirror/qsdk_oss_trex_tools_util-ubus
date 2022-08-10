@@ -63,9 +63,13 @@ else
 	echo "del firewall.@zone[0].network" >> $tmpfile
 fi
 
-echo commit firewall >> $tmpfile
-echo commit network >> $tmpfile
-echo commit dhcp >> $tmpfile
-#echo restart >> $tmpfile
+if [ -z "$nocommit" ] || [ "$nocommit" = "0" ]; then
+	echo commit firewall >> $tmpfile
+	echo commit network >> $tmpfile
+	echo commit dhcp >> $tmpfile
+fi
+if [ -n "$restart" ] && [ "$restart" = "1" ]; then
+	echo restart >> $tmpfile
+fi
 /usr/bin/util_uci -f $tmpfile
 rm $tmpfile
