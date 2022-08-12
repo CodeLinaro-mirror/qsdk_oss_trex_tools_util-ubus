@@ -488,7 +488,7 @@ static void client_ubus_done(void)
 int main(int argc, char * argv[])
 {
         char *path=NULL;
-        char rulefile[128] = "util_event_rule.txt";
+        char rulefile[128] = "/etc/omci/util_event_rule.txt";
         const char *dbg_str = getenv("UTIL_DBG");
         if ( dbg_str )
         {
@@ -503,8 +503,10 @@ int main(int argc, char * argv[])
         }
         if(argc>1)
                 strncpy(rulefile,argv[1],sizeof(rulefile)-1);
-        read_rule_file(rulefile);
-
+        if(read_rule_file(rulefile)==-1) {
+                client_ubus_done();
+                return -1;
+        }
         //init variable
         strcpy(ifname,"eth4");
         strcpy(script_name,"set_igmp_route.sh");
