@@ -1,0 +1,4 @@
+#ubus event,shell script,condition
+util_ubus_event,echo test,action=test
+network.interface,/usr/bin/set_igmp_route.sh,action=ifup & interface=lan
+

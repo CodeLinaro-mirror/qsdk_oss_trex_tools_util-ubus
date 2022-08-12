@@ -7,15 +7,18 @@ script_name : script file name, default : "set_igmp_route.sh"
 dbg_level : enable/disable debug message
 
 * How to setup variable value :
-ubus send util_ubus_event '{"set_delay":5,"shutdown":1}'	--> Exit program after 5 second
-ubus send "util_ubus_event" "{\"ifname\":\"eth4\",\"trap_mode\":1,\"fake_mode\":0}"  --> set ifname,trap_mode,fake_mode
-ubus send "util_ubus_event" "{\"script\":\"/usr/bin/set_igmp_route.sh\"}"
+ubus send util_ubus_event_ctl '{"set_delay":5,"shutdown":1}'	--> Exit program after 5 second
+ubus send util_ubus_event_ctl "{\"ifname\":\"eth4\",\"trap_mode\":1,\"fake_mode\":0}"  --> set ifname,trap_mode,fake_mode
+ubus send util_ubus_event_ctl "{\"script\":\"/usr/bin/set_igmp_route.sh\"}"
 
 * How to turn on debug message :
 UTIL_DBG=1 util_ubus_event &
+or
+util_ubus_event util_event_rule.txt &
 
 * What event monitor by program:
-util_ubus_event , network.interface
+util_ubus_event_ctl --> for util_ubus_event parameter setting 
+Please ref. util_event_rule.txt
 
 * What action with network.interface event:
 { "network.interface": {"action":"ifup","interface":"lan"} }  -->  run script "set_igmp_route.sh" after timer_delay when event is detected
