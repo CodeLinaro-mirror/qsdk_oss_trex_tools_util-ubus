@@ -221,7 +221,7 @@ else
 	echo set dhcp.$interface.interface=$interface >> $tmpfile
 	echo set dhcp.$interface.ignore=1 >> $tmpfile
 	## add wan interface to firewall zone[1] (zone wan)
-	if [ "$proto" != "none" ]; then
+	if [ "$proto" != "none" ] && [ -z "$nonat" ]; then
 		iflist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
 		if ! echo "$iflist"|grep -qw $interface; then
 			echo set_list firewall.@zone[1].network=$iflist $interface >> $tmpfile
