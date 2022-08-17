@@ -15,12 +15,29 @@ remove_name_from_list() {
 
 if [ -z "$1" ]; then
 	echo "$0 <openwrt_inf...>"
+	echo "[nocommit=1] [restart=1] $0 <openwrt_inf...>"
+
+	if [ -z "$(which ubus)" ]; then
+		echo "ubus not available?"
+		exit 1
+	fi
+	echo ""
+	echo "available openwrt_inf:"
 	iflist=$(ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface')
-	set $(ubus call network.interface dump |  jsonfilter -e '@.interface[@].device')
-	for ifname in $iflist; do
-		devname=$1; shift
-		printf "%-15s\t%s\n" "$ifname" "($devname)"
-	done
+	if [ ! -z "$iflist" ]; then
+		set $(ubus call network.interface dump |  jsonfilter -e '@.interface[@].device')
+		for ifname in $iflist; do
+			devname=$1; shift
+			printf "%-15s\t%s\n" "$ifname" "($devname)"
+		done
+	fi
+
+	echo ""
+	echo "example:"
+	echo "net_del.sh wan0"
+	echo "nocommit=1 /usr/sbin/net_del.sh wan0"
+	echo "restart=1 /usr/sbin/net_del.sh wan0"
+	echo ""
 	exit 1
 fi
 
@@ -63,12 +80,12 @@ else
 	echo "del firewall.@zone[0].network" >> $tmpfile
 fi
 
-if [ -z "$nocommit" ] || [ "$nocommit" = "0" ]; then
+if [ -z "$nocommit" -o "$nocommit" = "0" ]; then
 	echo commit firewall >> $tmpfile
 	echo commit network >> $tmpfile
 	echo commit dhcp >> $tmpfile
 fi
-if [ -n "$restart" ] && [ "$restart" = "1" ]; then
+if [ -n "$restart" -a "$restart" = "1" ]; then
 	echo restart >> $tmpfile
 fi
 /usr/bin/util_uci -f $tmpfile

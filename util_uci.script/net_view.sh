@@ -96,6 +96,10 @@ net_view ()
 	fi
 }
 
+if [ -z "$(which ubus)" ]; then
+	echo "ubus not available?"
+	exit 1
+fi
 list="$(ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface')"
 for inf in $list; do
 	if [ -z "$1" ]; then

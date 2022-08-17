@@ -14,13 +14,23 @@
 # dns[1-4]
 # 
 if [ -z "$1" ]; then
-	echo "$0 <openwrt_inf_name>"
+	echo "$0 <openwrt_inf...>"
+
+	if [ -z "$(which ubus)" ]; then
+		echo "ubus not available?"
+		exit 1
+	fi
+	echo ""
+	echo "available openwrt_inf:"
 	iflist=$(ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface')
-	set $(ubus call network.interface dump |  jsonfilter -e '@.interface[@].device')
-	for ifname in $iflist; do
-		devname=$1; shift
-		printf "%-15s\t%s\n" "$ifname" "($devname)"
-	done
+	if [ ! -z "$iflist" ]; then
+		set $(ubus call network.interface dump |  jsonfilter -e '@.interface[@].device')
+		for ifname in $iflist; do
+			devname=$1; shift
+			printf "%-15s\t%s\n" "$ifname" "($devname)"
+		done
+	fi
+
 	exit 1
 fi
 

@@ -86,24 +86,25 @@ add_none() {
 
 help_usage() {
 	echo "common parameter:"
-	echo "pre_del 	- delete old network setting"
-	echo "disabled	- disable network"
+	echo "pre_del 	- del old setting before add interface"
+	echo "disabled	- disable interface"
 	echo "auto		- bring up on boot"
+	echo "nonat		- disable nat"
 	echo "nocommit	- no commit command"
-	echo "restart	- restart network"
+	echo "restart		- force restart interface"
 	echo ""
 
 	if [ "$proto" = "static" ]; then
 		echo "static parameter:"
-		echo "ifname		- network device name"
+		echo "ifname		- interface device name"
 		echo "defaultroute	- use nexthop as system defaultroute"
 		echo "mtu		- mtu"
-		echo "ipaddr		- network ip address"
-		echo "netmask		- network netmask"
-		echo "gateway		- network gateway"
+		echo "ipaddr		- interface ip address"
+		echo "netmask		- interface netmask"
+		echo "gateway		- interface gateway"
 		echo "dns[1-4]	- dns"
-		echo "ip6addr		- network ip6 address"
-		echo "ip6gw		- network ip6 gateway"
+		echo "ip6addr		- interface ip6 address"
+		echo "ip6gw		- interface ip6 gateway"
 		echo "ip6prefix	- public prefix routed to this device for distribution to clients"
 		echo "ip6ifaceid	- 'eui64', 'random', fixed value like '::1' or '::1:2'"
 		echo ""
@@ -114,8 +115,7 @@ help_usage() {
 
 	elif [ "$proto" = "dhcp" -o "$proto" = "dhcpv6" ]; then
 		echo "dhcp/dhcpv6 parameter:"
-		echo "defaultroute	- use nexthop as system defaultroute"
-		echo "ifname		- network device name"
+		echo "ifname		- interface device name"
 		echo "mtu		- mtu"
 		echo "defaultroute	- use nexthop as system defaultroute"
 		echo ""
@@ -126,7 +126,7 @@ help_usage() {
 
 	elif [ "$proto" = "pppoe" ]; then
 		echo "pppoe parameter:"
-		echo "ifname		- network device name"
+		echo "ifname		- interface device name"
 		echo "mtu		- mtu"
 		echo "defaultroute	- use nexthop as system defaultroute"
 		echo "username	- pppoe username"
@@ -139,7 +139,7 @@ help_usage() {
 
 	elif [ "$proto" = "pptp" ]; then
 		echo "pptp parameter:"
-		echo "ifname		- network device name"
+		echo "ifname		- interface device name"
 		echo "mtu		- mtu"
 		echo "server		- pptp server"
 		echo "username	- pptp username"
@@ -152,13 +152,21 @@ help_usage() {
 
 	elif [ "$proto" = "bridge" ]; then
 		echo "bridge parameter:"
-		echo "ifname		- network device name"
-		echo "ipaddr		- network ip address"
-		echo "netmask		- network netmask"
-		echo "gateway		- network gateway"
+		echo "ifname		- interface device name"
+		echo "ipaddr		- interface ip address"
+		echo "netmask		- interface netmask"
+		echo "gateway		- interface gateway"
 		echo ""
 		echo "example:"
 		echo "pre_del=1 ifname='eth0.2.0 eth0.3.0 eth0.4.0 eth0.5.0' ipaddr=192.168.1.1 netmask=255.255.255.0 /usr/sbin/net_add.sh bridge lan"
+		echo ""
+
+	elif [ "$proto" = "none" ]; then
+		echo "none parameter:"
+		echo "ifname		- interface device name"
+		echo ""
+		echo "example:"
+		echo "pre_del=1 ifname=eth0 /usr/sbin/net_add.sh none wan0"
 		echo ""
 	fi
 }
@@ -166,7 +174,7 @@ help_short() {
 	echo "$0 <proto> <openwrt_inf_name>"
 	echo "$0 <proto> - show help"
 	echo ""
-	echo "available proto: static, dhcp, dhcpv6, pppoe, pptp, bridge"
+	echo "available proto: static, dhcp, dhcpv6, pppoe, pptp, bridge, none"
 	echo ""
 }
 
@@ -221,7 +229,7 @@ else
 	echo set dhcp.$interface.interface=$interface >> $tmpfile
 	echo set dhcp.$interface.ignore=1 >> $tmpfile
 	## add wan interface to firewall zone[1] (zone wan)
-	if [ "$proto" != "none" ] && [ -z "$nonat" ]; then
+	if [ "$proto" != "none" -a -z "$nonat" ]; then
 		iflist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
 		if ! echo "$iflist"|grep -qw $interface; then
 			echo set_list firewall.@zone[1].network=$iflist $interface >> $tmpfile
@@ -229,7 +237,7 @@ else
 		fi
 	fi
 fi
-if [ -z "$nocommit" ] || [ "$nocommit" = "0" ]; then
+if [ -z "$nocommit" -o "$nocommit" = "0" ]; then
 	echo commit network >> $tmpfile
 	echo commit dhcp >> $tmpfile
 fi
