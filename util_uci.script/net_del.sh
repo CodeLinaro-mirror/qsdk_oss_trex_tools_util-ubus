@@ -15,7 +15,7 @@ remove_name_from_list() {
 
 if [ -z "$1" ]; then
 	echo "$0 <openwrt_inf...>"
-	echo "[nocommit=1] [restart=1] $0 <openwrt_inf...>"
+	echo "[restart=1] $0 <openwrt_inf...>"
 
 	if [ -z "$(which ubus)" ]; then
 		echo "ubus not available?"
@@ -35,7 +35,6 @@ if [ -z "$1" ]; then
 	echo ""
 	echo "example:"
 	echo "net_del.sh wan0"
-	echo "nocommit=1 /usr/sbin/net_del.sh wan0"
 	echo "restart=1 /usr/sbin/net_del.sh wan0"
 	echo ""
 	exit 1
@@ -80,11 +79,10 @@ else
 	echo "del firewall.@zone[0].network" >> $tmpfile
 fi
 
-if [ -z "$nocommit" -o "$nocommit" = "0" ]; then
-	echo commit firewall >> $tmpfile
-	echo commit network >> $tmpfile
-	echo commit dhcp >> $tmpfile
-fi
+echo commit firewall >> $tmpfile
+echo commit network >> $tmpfile
+echo commit dhcp >> $tmpfile
+
 if [ -n "$restart" -a "$restart" = "1" ]; then
 	echo restart >> $tmpfile
 fi

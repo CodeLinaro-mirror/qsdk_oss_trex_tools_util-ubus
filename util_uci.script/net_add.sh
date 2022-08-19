@@ -90,8 +90,7 @@ help_usage() {
 	echo "disabled	- disable interface"
 	echo "auto		- bring up on boot"
 	echo "nonat		- disable nat"
-	echo "nocommit	- no commit command"
-	echo "restart		- force restart interface"
+	echo "restart	- restart network"
 	echo ""
 
 	if [ "$proto" = "static" ]; then
@@ -237,11 +236,11 @@ else
 		fi
 	fi
 fi
-if [ -z "$nocommit" -o "$nocommit" = "0" ]; then
-	echo commit network >> $tmpfile
-	echo commit dhcp >> $tmpfile
-fi
-if [ "$restart" = "1" ]; then
+
+echo commit network >> $tmpfile
+echo commit dhcp >> $tmpfile
+
+if [ -n "$restart" -a "$restart" = "1" ]; then
 	echo restart >> $tmpfile
 fi
 /usr/bin/util_uci -f $tmpfile
