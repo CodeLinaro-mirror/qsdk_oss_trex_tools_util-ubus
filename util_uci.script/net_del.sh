@@ -56,7 +56,7 @@ for ifname in $iflist; do
 done
 
 ## del interface from firewall zone wan
-wanlist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
+wanlist=$(util_uci get firewall.@zone[1].network|cut -d= -s -f2)
 for ifname in $iflist; do
 	wanlist2=$(remove_name_from_list $ifname $wanlist)
 	wanlist="$wanlist2"
@@ -68,7 +68,7 @@ else
 fi
 
 ## del interface from firewall zone lan
-lanlist=$(util_uci get firewall.@zone[0].network|cut -d= -f2)
+lanlist=$(util_uci get firewall.@zone[0].network|cut -d= -s -f2)
 for ifname in $iflist; do
 	lanlist2=$(remove_name_from_list $ifname $lanlist)
 	lanlist="$lanlist2"

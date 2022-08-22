@@ -216,7 +216,7 @@ esac
 
 if [ "$proto" = "bridge" ]; then
 	## add interface to firewall zone[0] - lan
-	iflist=$(util_uci get firewall.@zone[0].network|cut -d= -f2)
+	iflist=$(util_uci get firewall.@zone[0].network|cut -d= -s -f2)
 	if ! echo "$iflist"|grep -qw $interface; then
 		echo set_list firewall.@zone[0].network=$iflist $interface >> $tmpfile
 		echo commit firewall >> $tmpfile
@@ -229,7 +229,7 @@ else
 	echo set dhcp.$interface.ignore=1 >> $tmpfile
 	## add wan interface to firewall zone[1] (zone wan)
 	if [ "$proto" != "none" -a -z "$nonat" ]; then
-		iflist=$(util_uci get firewall.@zone[1].network|cut -d= -f2)
+		iflist=$(util_uci get firewall.@zone[1].network|cut -d= -s -f2)
 		if ! echo "$iflist"|grep -qw $interface; then
 			echo set_list firewall.@zone[1].network=$iflist $interface >> $tmpfile
 			echo commit firewall >> $tmpfile
