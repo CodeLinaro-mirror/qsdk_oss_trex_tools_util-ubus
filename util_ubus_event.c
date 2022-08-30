@@ -43,9 +43,10 @@ static int shutdown=0;
 static int trap_mode=-1,fake_mode=-1;
 static char ifname[16]={0}, script_name[256]={0};
 
-int dbg_level=0;
+int dbg_level=0,cfg_reload=0,cfg_dump=0;
 struct list_head eventlist;
 int timer_delay = 5;
+char rulefile[128] = "/etc/omci/util_event_rule.txt";
 
 int init_event_head_inst(EVENT_HEAD_LIST **inst) {
         *inst = malloc(sizeof(EVENT_HEAD_LIST));
@@ -89,6 +90,7 @@ int destory_eventlist(struct list_head *listinst) {
                 list_del(&event_head->event_head_node);
                 free(event_head);
         }
+        memset(listinst,0,sizeof(struct list_head));
         return 0;
 }
 
@@ -339,7 +341,6 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
                 return;
         str = blobmsg_format_json(msg, true);
         dbprintf("{ \"%s\": %s }\n", type, str);
-        jobj = json_tokener_parse(str);
         if ( strncmp(type, UBUS_EVENT_CTL, strlen(UBUS_EVENT_CTL)) == 0 ) {
                 ubus_get_objint(msg, "set_delay", &timer_delay);
                 if ( !ubus_get_objint(msg, "shutdown", &shutdown) ) {
@@ -351,6 +352,20 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
                 ubus_get_objint(msg, "trap_mode", &trap_mode);
                 ubus_get_objint(msg, "fake_mode", &fake_mode);
                 ubus_get_objint(msg, "dbg_level", &dbg_level);
+                ubus_get_objint(msg, "cfg_reload", &cfg_reload);
+                ubus_get_objint(msg, "cfg_dump", &cfg_dump);
+                if(cfg_reload) {
+                	destory_eventlist(&eventlist);
+                	if(read_rule_file(rulefile)==-1) {
+                		uloop_cancelled = true;
+                	}
+                	dbprintf("Rule file reloaded!\n");
+                	cfg_reload=0;
+                }
+                if(cfg_dump) {
+                	dump_eventlist(&eventlist);
+                	cfg_dump=0;
+                }
         }
         {
                 list_for_each_entry(event_head, &eventlist, event_head_node)
@@ -361,13 +376,15 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
                                         list_for_each_entry(cond_inst, &ubus_event_inst->cond_list, cond_node)
                                         {
                                                 cond_inst->ismatch = 0;
+                                                jobj = json_tokener_parse(str);
                                                 if ( json_object_object_get_ex(jobj, cond_inst->cond_patten, &obj_key) ) {
                                                         strval = json_object_get_string(obj_key);
                                                         if ( strcmp(strval, cond_inst->cond_value) == 0 ) {
                                                                 cond_inst->ismatch = 1;
                                                         }
+                                                        json_object_put(obj_key);
                                                 }
-                                                json_object_put(obj_key);
+                                                json_object_put(jobj);
                                         }
                                         oper = 'S';
                                         list_for_each_entry(cond_inst, &ubus_event_inst->cond_list, cond_node)
@@ -398,7 +415,6 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
                         }
                 }
         }
-        json_object_put(jobj);
         free(str);
 }
  
@@ -488,7 +504,6 @@ static void client_ubus_done(void)
 int main(int argc, char * argv[])
 {
         char *path=NULL;
-        char rulefile[128] = "/etc/omci/util_event_rule.txt";
         const char *dbg_str = getenv("UTIL_DBG");
         if ( dbg_str )
         {
