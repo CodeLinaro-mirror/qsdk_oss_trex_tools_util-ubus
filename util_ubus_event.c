@@ -273,6 +273,7 @@ int ubus_get_objstr(struct blob_attr *msg, char *key, char *str, int strlen)
         enum json_type jtype;
         json_object *obj_key;
         const char *strval;
+        *str=0;
         jobj = json_tokener_parse(blobmsg_format_json(msg, true));
         if ( json_object_object_get_ex(jobj, key, &obj_key) )
         {
@@ -285,6 +286,7 @@ int ubus_get_objstr(struct blob_attr *msg, char *key, char *str, int strlen)
                                 strncpy(str, strval, strlen);
                                 break;
                         default:
+
                                 ret=-1;
                                 break;
                 }
@@ -336,6 +338,7 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
         json_object *jobj;
         json_object *obj_key;
         char oper;
+        char pre_param[128]={0},param[128]={0},run_cmd[1025]={0};
 
         if ( !msg )
                 return;
@@ -371,6 +374,8 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
                 list_for_each_entry(event_head, &eventlist, event_head_node)
                 {
                         if ( strcmp(type, event_head->event_name) == 0 ) {
+                        	ubus_get_objstr(msg, "pre_param", pre_param, sizeof(pre_param) - 1);
+                        	ubus_get_objstr(msg, "param", param, sizeof(param) - 1);
                                 list_for_each_entry(ubus_event_inst, &event_head->event_head_list, event_node) {
                                         ubus_event_inst->cond_result = 0;
                                         list_for_each_entry(cond_inst, &ubus_event_inst->cond_list, cond_node)
@@ -408,8 +413,9 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
                                                 oper = cond_inst->operate;
                                         }
                                         if ( ubus_event_inst->cond_result ) {
-                                                dbprintf("%s\n",ubus_event_inst->shell_name);
-                                                system(ubus_event_inst->shell_name);
+                                                snprintf(run_cmd,sizeof(run_cmd)-1,"%s %s %s",pre_param,ubus_event_inst->shell_name,param);
+                                                dbprintf("%s\n",run_cmd);
+                                                system(run_cmd);
                                         }
                                 }
                         }
