@@ -31,6 +31,8 @@ enum uci_command {
 	UCI_CMD_DEL,
 	UCI_CMD_GET,
 	UCI_CMD_SETLIST,
+	UCI_CMD_ADDLIST,
+	UCI_CMD_DELLIST,
 	UCI_CMD_CHANGES,
 	UCI_CMD_COMMIT,
 	UCI_CMD_RESTART,
@@ -134,6 +136,8 @@ uci_line_parser(char *input_line, UCI_LINE * line)
 	case UCI_CMD_DEL:
 	case UCI_CMD_GET:
 	case UCI_CMD_SETLIST:
+	case UCI_CMD_ADDLIST:
+	case UCI_CMD_DELLIST:
 		pt = strtok(NULL, ".");
 		break;
 	default:
@@ -207,6 +211,71 @@ uci_cmd_del(UCI_LINE * line)
 {
 	int ret;
 	ret = util_ubus_uci_delete(line->package, NULL, line->section, line->option);
+	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
+	return ret;
+}
+
+int
+uci_cmd_add_list(UCI_LINE * line)
+{
+	int ret, cnt = 0;
+	char buf[256];
+	char *arr_value[16],*strpt;
+	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
+	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
+
+	strpt = strtok(buf, " ");
+	while (strpt != NULL) {
+		if(strcmp(strpt,line->value)==0)
+			return 0;
+		else
+			arr_value[cnt++] = strpt;
+		if ( cnt >= 16 )
+			break;
+		strpt = strtok(NULL, " ");
+	}
+	if(cnt<16)
+		arr_value[cnt++] = line->value;
+	else
+		return -1;
+	if (line->option)
+		ret = util_ubus_uci_set_list(line->package, line->section, line->option, arr_value, cnt);
+	else
+		ret = UBUS_STATUS_NOT_FOUND;
+	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
+	return ret;
+}
+
+int
+uci_cmd_del_list(UCI_LINE * line)
+{
+	int ret, i, match=0, cnt = 0;
+	char buf[256];
+	char *arr_value[16], *strpt;
+	ret = util_ubus_uci_get(line->package, line->section, line->option, buf,
+			sizeof(buf) - 1);
+	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
+
+	strpt = strtok(buf, " ");
+	while (strpt != NULL) {
+		arr_value[cnt++] = strpt;
+		if ( cnt >= 16 )
+			break;
+		strpt = strtok(NULL, " ");
+	}
+	for(i=0;i<cnt;i++) {
+		if(match && i<cnt-1)
+			arr_value[i]=arr_value[i+1];
+		else if(strcmp(arr_value[i],line->value)==0) {
+			match=1;
+			arr_value[i]=arr_value[i+1];
+		}
+	}
+	if ( line->option )
+		ret = util_ubus_uci_set_list(line->package, line->section, line->option,
+				arr_value, cnt-match);
+	else
+		ret = UBUS_STATUS_NOT_FOUND;
 	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 	return ret;
 }
@@ -289,6 +358,8 @@ uci_dispatchTable uci_cmd_dispatch[] = {
 	[UCI_CMD_DEL] = { "del", uci_cmd_del },
 	[UCI_CMD_GET] = { "get", uci_cmd_get },
 	[UCI_CMD_SETLIST] = { "set_list", uci_cmd_setlist },
+	[UCI_CMD_ADDLIST] = { "add_list",uci_cmd_add_list },
+	[UCI_CMD_DELLIST] = { "del_list",uci_cmd_del_list },
 	[UCI_CMD_CHANGES] = { "changes", uci_cmd_changes },
 	[UCI_CMD_COMMIT] = { "commit", uci_cmd_commit },
 	[UCI_CMD_RESTART] = { "restart", uci_cmd_restart }
@@ -334,6 +405,8 @@ print_help(void)
 		"get      <config>.<section>[.<option>]\n"
 		"del      <config>.<section>[.<option>]\n"
 		"set_list <config>.<section>.<option>=<value1> <value2> <value3>\n"
+		"add_list <config>.<section>.<option>=<value>\n"
+		"del_list <config>.<section>.<option>=<value>\n"
 		"changes  <config>\n"
 		"commit  [<config>]\n"
 		"restart [lan | wan]\n"
