@@ -23,13 +23,10 @@ if [ -z "$1" ]; then
 	echo ""
 	echo "available openwrt_inf:"
 	iflist=$(ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface')
-	if [ ! -z "$iflist" ]; then
-		set $(ubus call network.interface dump |  jsonfilter -e '@.interface[@].device')
-		for ifname in $iflist; do
-			devname=$1; shift
-			printf "%-15s\t%s\n" "$ifname" "($devname)"
-		done
-	fi
+	for ifname in $iflist; do
+		devname=$(ubus call network.interface.$ifname status |  jsonfilter -e '@.device')
+		printf "%-15s\t%s\n" "$ifname" "($devname)"
+	done
 
 	exit 1
 fi
