@@ -25,6 +25,7 @@ if [ -z "$1" ]; then
 	iflist=$(ubus call network.interface dump |  jsonfilter -e '@.interface[@].interface')
 	for ifname in $iflist; do
 		devname=$(ubus call network.interface.$ifname status |  jsonfilter -e '@.device')
+		[ -z "$devname" ] && devname="l3:$(ubus call network.interface.$ifname status |  jsonfilter -e '@.l3_device')"
 		printf "%-15s\t%s\n" "$ifname" "($devname)"
 	done
 
