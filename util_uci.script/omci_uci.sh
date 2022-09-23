@@ -6,20 +6,19 @@ r_omci() {
 
 	[ -z "$1" ] && return 1
 	
-	local ret_val=`uci get omci.global.$1 | sed 's/^[ \t]*//g'`
+	local ret_val=`uci -q get omci.global.$1 | sed 's/^[ \t]*//g'`
 	
-	if [ $ret_val =~ "not found" ]; then
-		echo ""
-	fi
-	echo ret_val
+	echo $ret_val
 	return 0
 }
+
 w_omci() {
 	[ -z "$1" -o -z "$2" ]&& return 1
 	
 	echo set omci.global.$1=$2 >> $tmpfile
 	return 0
 }
+
 w_system(){
 
 	[ -z "$1" -o -z "$2" ]&& return 1
@@ -28,44 +27,41 @@ w_system(){
 	return 0
 
 }
+
 r_system(){
 
 	[ -z "$1" ] && return 1
 	
-	local ret_val=`uci get system.@system[0].$1 | sed 's/^[ \t]*//g'`
+	local ret_val=`uci -q get system.@system[0].$1 | sed 's/^[ \t]*//g'`
 	
-	if [ $ret_val =~ "not found" ]; then
-		echo ""
-	fi
-	echo ret_val
+	echo $ret_val
 	return 0
 
 }
+
 r_ntp() {
 	[ -z "$1" ] && return 1
 	
-	local ret_val=`uci get system.ntp.$1 | sed 's/^[ \t]*//g'`
+	local ret_val=`uci -q get system.ntp.$1 | sed 's/^[ \t]*//g'`
 	
-	if [ $ret_val =~ "not found" ]; then
-		echo ""
-	fi
-	echo ret_val
+	echo $ret_val
 	return 0
 }
-r_ntp_all() {
-	[ -z "$1" ] && return 1
+
+r_ntp_all() {	
+	local ret_val=`uci -q show system.ntp`
 	
-	local ret_val=`uci show system.ntp`
-	
-	echo ret_val
+	echo $ret_val
 	return 0
 }
+
 w_ntp() {
 	[ -z "$1" -o -z "$2" ]&& return 1
 	
 	echo set system.ntp.$1=$2 >> $tmpfile
 	return 0
 }
+
 w_ntp_list() {
 	[ -z "$1" -o -z "$2" ]&& return 1
 	
@@ -76,8 +72,9 @@ w_ntp_list() {
 system_restart(){
 	/etc/init.d system restart
 }
+
 help_short() {
-	echo "r_omci|w_omci"	
+	echo "r_omci|w_omci|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list"	
 }
 if [ -z "$1" ]; then
 	help_short
