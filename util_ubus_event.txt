@@ -1,15 +1,19 @@
 timer_delay : delay n second to execute action ( such as shutdown )
+shell_delay : run srcipt interval time ( n second )
+shell_run : 0 -> disable run script , 1 -> enable run script.
+script : shell command. 
 shutdown : set 1 to exit program after timer_delay.
 ifname : device name for set_igmp_route.sh
 trap_mode : trap mode value for set_igmp_route.sh
 fake_mode : fake mode value for set_igmp_route.sh
 dbg_level : enable/disable debug message (1 : enable, 0: disable)
-cfg_reload : set 1 to reload ubus_event rule file.
+cfg_reload : set 1 to reload ubus_event rule file. (util_event_rule.txt)
 cfg_dump : set 1 to print current rule setting.
 
 * How to setup variable value :
 util_ubus_event_ctl --> for util_ubus_event parameter setting
-ubus send util_ubus_event_ctl '{"set_delay":5,"shutdown":1}'	--> Exit program after 5 second
+ubus send util_ubus_event_ctl '{"set_delay":5,"shutdown":1}'	--> Exit program after 5 seconds
+ubus send util_ubus_event_ctl '{"shell_delay":10,"shell_run":1,"script":"date"}' --> Run "date" every 10 seconds
 ubus send util_ubus_event_ctl '{"ifname":"eth4","trap_mode":1,"fake_mode":0}'  --> set ifname,trap_mode,fake_mode
 ubus send util_ubus_event_ctl '{"cfg_reload":1}'
 ubus send util_ubus_event_ctl '{"cfg_dump":1}'

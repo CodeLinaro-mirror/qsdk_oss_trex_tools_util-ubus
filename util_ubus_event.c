@@ -39,13 +39,16 @@ typedef struct __event_head_list__ {
 
 static struct ubus_context * ctx = NULL;
 static const char * cli_path;
-static int shutdown=0;
+static int shutdown=0, shell_run=0;
 static int trap_mode=-1,fake_mode=-1;
 static char ifname[16]={0}, script_name[256]={0};
 
 int dbg_level=0,cfg_reload=0,cfg_dump=0;
 struct list_head eventlist;
 int timer_delay = 5;
+int shell_delay = 5;
+static struct uloop_timeout timer_shutdown;
+static struct uloop_timeout timer_shell;
 char rulefile[128] = "/etc/omci/util_event_rule.txt";
 
 int init_event_head_inst(EVENT_HEAD_LIST **inst) {
@@ -241,30 +244,25 @@ int read_rule_file(char *filename) {
         return 0;
 }
 
-static void shutdown_timer(struct uloop_timeout *timeout)
+static void shutdown_timer_cb(struct uloop_timeout *timeout)
 {
     //uloop_timeout_cancel(timeout);
     uloop_cancelled = true;
 }
-#if 0
-static void shell_timer(struct uloop_timeout *timeout)
+#if 1
+static void shell_timer_cb(struct uloop_timeout *timeout)
 {
-        char cmd[128]={0};
-        if(trap_mode != -1 || fake_mode!=-1 )
-        {
-                snprintf(cmd, 127, "ifname=%s trap_mode=%d fake_mode=%d %s",
-                                ifname, trap_mode, fake_mode,script_name);
-                dbprintf("call script: %s\n", cmd);
-                system(cmd);
-        }
-        else
-        {
-                dbprintf("trap_mode or fake mode unknown ! \n");
-        }
+        //char cmd[128]={0};
+
+	//snprintf(cmd, 127, "ifname=%s trap_mode=%d fake_mode=%d %s",
+        //                ifname, trap_mode, fake_mode,script_name);
+
+        dbprintf("call script: %s\n", script_name);
+        system(script_name);
+        if ( shell_run )
+        	uloop_timeout_set(&timer_shell, shell_delay * 1000);
 }
 #endif
-static struct uloop_timeout timer_shutdown = { .cb = shutdown_timer };
-//static struct uloop_timeout timer_shell = { .cb = shell_timer };
 
 int ubus_get_objstr(struct blob_attr *msg, char *key, char *str, int strlen)
 {
@@ -273,7 +271,7 @@ int ubus_get_objstr(struct blob_attr *msg, char *key, char *str, int strlen)
         enum json_type jtype;
         json_object *obj_key;
         const char *strval;
-        *str=0;
+
         jobj = json_tokener_parse(blobmsg_format_json(msg, true));
         if ( json_object_object_get_ex(jobj, key, &obj_key) )
         {
@@ -283,6 +281,7 @@ int ubus_get_objstr(struct blob_attr *msg, char *key, char *str, int strlen)
                         case json_type_string:
                                 strval = json_object_get_string(obj_key);
                                 dbprintf("%s=%s\n", key, strval);
+                                *str=0;
                                 strncpy(str, strval, strlen);
                                 break;
                         default:
@@ -349,6 +348,11 @@ static void ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_
                 if ( !ubus_get_objint(msg, "shutdown", &shutdown) ) {
                         if ( shutdown )
                                 uloop_timeout_set(&timer_shutdown, timer_delay * 1000);
+                }
+                ubus_get_objint(msg, "shell_delay", &shell_delay);
+                if ( !ubus_get_objint(msg, "shell_run", &shell_run) ) {
+                	if ( shell_run )
+                        	uloop_timeout_set(&timer_shell, shell_delay * 1000);
                 }
                 ubus_get_objstr(msg, "script", script_name, sizeof(script_name) - 1);
                 ubus_get_objstr(msg, "ifname", ifname, sizeof(ifname) - 1);
@@ -534,7 +538,8 @@ int main(int argc, char * argv[])
         trap_mode=-1;
         fake_mode=-1;
         client_ubus_register_events();
-
+        timer_shutdown.cb = shutdown_timer_cb;
+        timer_shell.cb = shell_timer_cb;
         uloop_run();
         client_ubus_done();
         destory_eventlist(&eventlist);
