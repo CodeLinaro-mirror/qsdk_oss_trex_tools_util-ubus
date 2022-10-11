@@ -8,7 +8,7 @@ r_omci() {
 	
 	local ret_val=`uci -q get omci.global.$1 | sed 's/^[ \t]*//g'`
 	
-	echo $ret_val
+	echo -ne $ret_val
 	return 0
 }
 
@@ -16,6 +16,22 @@ w_omci() {
 	[ -z "$1" -o -z "$2" ]&& return 1
 	
 	echo set omci.global.$1=$2 >> $tmpfile
+	return 0
+}
+
+r_omci_option() {
+
+	[ -z "$1" -o -z "$2" ] && return 1
+	
+	local ret_val=`uci -q get omci.$1.$2 | sed 's/^[ \t]*//g'`
+
+	echo -ne $ret_val
+	return 0
+}
+w_omci_option() {
+	[ -z "$1" -o -z "$2" -o -z "$3" ]&& return 1
+	
+	echo set omci.$1.$2=$3 >> $tmpfile
 	return 0
 }
 
@@ -74,7 +90,7 @@ system_restart(){
 }
 
 help_short() {
-	echo "r_omci|w_omci|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list"	
+	echo "r_omci|w_omci|r_omci_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list"	
 }
 if [ -z "$1" ]; then
 	help_short
@@ -83,7 +99,7 @@ fi
 
 proto=$1
 case $proto in
-	r_omci|w_omci|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list) ;;
+	r_omci|w_omci|r_omci_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list) ;;
 	*) help_short; exit 1;;
 esac
 
@@ -99,6 +115,8 @@ case $proto in
 	r_ntp)	r_ntp $2;;	
 	sys_restart) system_restart;;
 	w_ntp_list) w_ntp_list $2 $3;;
+	r_omci_option)	r_omci_option $2 $3;;
+	w_omci_option)	w_omci_option $2 $3 $4;;	
 	*)	add_none;;
 esac
 
@@ -108,7 +126,7 @@ if [ $? != "0" ] ; then
 	exit 1
 fi
 
-if [ "$proto" = "w_omci" ]; then
+if [ "$proto" = "w_omci" -o "$proto" = "w_omci_option" ]; then
 	echo commit omci >> $tmpfile
 	/usr/bin/util_uci -f $tmpfile
 fi 
