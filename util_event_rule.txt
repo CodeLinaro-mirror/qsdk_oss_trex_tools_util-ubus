@@ -1,4 +1,3 @@
 #ubus event,shell script,condition [(&)/(|) condition]
 util_ubus_event,echo test,action=test
-network.interface,interface=lan /usr/bin/set_igmp_route.sh,action=ifup & interface=lan
-network.interface,interface=lan1 /usr/bin/set_igmp_route.sh,action=ifup & interface=lan1
+network.interface,touch /var/stop_set_igmp_route;sleep 1;/usr/bin/set_igmp_route.sh&,action=ifup & interface=loopback

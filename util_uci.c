@@ -340,8 +340,7 @@ uci_cmd_restart(UCI_LINE * line)
 		snprintf(cmd, 63, "ifup %s", line->package);
 		ret = system(cmd);
 	} else {
-		//system("/etc/init.d/network restart &");
-		ret = system("ubus call network restart &");
+		ret = system("/etc/init.d/network restart");
 	}
 	return ret;
 }
