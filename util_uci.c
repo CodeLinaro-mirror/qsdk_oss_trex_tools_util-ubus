@@ -166,7 +166,7 @@ uci_cmd_add(UCI_LINE * line)
 	if (strncmp(line->package, "network", strlen(line->package)) == 0)
 		ret = util_ubus_uci_add_section(line->package, "interface", line->section);
 	else
-		ret = util_ubus_uci_add_section(line->package, line->section, line->section);
+		ret = util_ubus_uci_add_section(line->package, line->section, NULL);
 	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 	return ret;
 }
