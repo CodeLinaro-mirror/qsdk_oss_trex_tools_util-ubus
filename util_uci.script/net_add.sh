@@ -8,6 +8,7 @@ add_static() {
 	[ -n "$ipaddr" ]	&& echo set network.$interface.ipaddr=$ipaddr >> $tmpfile	#  should be list option?
 	[ -n "$netmask" ]	&& echo set network.$interface.netmask=$netmask >> $tmpfile
 	[ -n "$gateway" ]	&& echo set network.$interface.gateway=$gateway >> $tmpfile
+	[ -n "$mac" ]		&& echo set network.$interface.macaddr=$mac >> $tmpfile
 
 	# dns is actually a list option, but we use option with multiple value instead as set_list is not supported in util_uci yet
 	# ps: it seems list option is backward compatible with option with multiple value
@@ -30,6 +31,7 @@ add_dhcp() {
 	echo set network.$interface.proto=dhcp >> $tmpfile
 	[ -n "$ifname" ]	&& echo set network.$interface.ifname=$ifname >> $tmpfile
 	[ -n "$mtu" ]		&& echo set network.$interface.mtu=$mtu >> $tmpfile
+	[ -n "$mac" ]		&& echo set network.$interface.macaddr=$mac >> $tmpfile
 	[ -n "$defaultroute" ]	&& echo set network.$interface.defaultroute=$defaultroute >> $tmpfile	# use remote nexthop as default route
 }
 
@@ -44,6 +46,7 @@ add_pppoe() {
 	echo set network.$interface.proto=pppoe >> $tmpfile
 	[ -n "$ifname" ]	&& echo set network.$interface.ifname=$ifname >> $tmpfile
 	[ -n "$mtu" ]		&& echo set network.$interface.mtu=$mtu >> $tmpfile
+	[ -n "$mac" ]		&& echo set network.$interface.macaddr=$mac >> $tmpfile
 	[ -n "$defaultroute" ]	&& echo set network.$interface.defaultroute=$defaultroute >> $tmpfile	# use remote nexthop as default route
 	[ -n "$username" ]	&& echo set network.$interface.username=$username >> $tmpfile
 	[ -n "$passwd" ]	&& echo set network.$interface.password=$passwd >> $tmpfile
@@ -59,6 +62,7 @@ add_pptp() {
 	echo set network.$interface.proto=pptp >> $tmpfile
 	[ -n "$ifname" ]	&& echo set network.$interface.ifname=$ifname >> $tmpfile
 	[ -n "$mtu" ]		&& echo set network.$interface.mtu=$mtu >> $tmpfile
+	[ -n "$mac" ]		&& echo set network.$interface.macaddr=$mac >> $tmpfile
 	[ -n "$server" ]	&& echo set network.$interface.server=$server >> $tmpfile
 	[ -n "$username" ]	&& echo set network.$interface.username=$username >> $tmpfile
 	[ -n "$passwd" ]	&& echo set network.$interface.password=$passwd >> $tmpfile
@@ -77,11 +81,13 @@ add_bridge() {
 	[ -n "$ipaddr" ]	&& echo set network.$interface.ipaddr=$ipaddr >> $tmpfile
 	[ -n "$netmask" ]	&& echo set network.$interface.netmask=$netmask >> $tmpfile
 	[ -n "$gateway" ]	&& echo set network.$interface.gateway=$gateway >> $tmpfile
+	[ -n "$mac" ]		&& echo set network.$interface.macaddr=$mac >> $tmpfile
 }
 
 add_none() {
 	echo set network.$interface.proto=none >> $tmpfile
 	[ -n "$ifname" ]	&& echo set network.$interface.ifname=$ifname >> $tmpfile
+	[ -n "$mac" ]		&& echo set network.$interface.macaddr=$mac >> $tmpfile
 }
 
 help_usage() {
@@ -98,6 +104,7 @@ help_usage() {
 		echo "ifname		- interface device name"
 		echo "defaultroute	- use nexthop as system defaultroute"
 		echo "mtu		- mtu"
+		echo "mac		- macaddr"
 		echo "ipaddr		- interface ip address"
 		echo "netmask		- interface netmask"
 		echo "gateway		- interface gateway"
@@ -116,6 +123,7 @@ help_usage() {
 		echo "dhcp/dhcpv6 parameter:"
 		echo "ifname		- interface device name"
 		echo "mtu		- mtu"
+		echo "mac		- macaddr"
 		echo "defaultroute	- use nexthop as system defaultroute"
 		echo ""
 		echo "example:"
@@ -127,6 +135,7 @@ help_usage() {
 		echo "pppoe parameter:"
 		echo "ifname		- interface device name"
 		echo "mtu		- mtu"
+		echo "mac		- macaddr"
 		echo "defaultroute	- use nexthop as system defaultroute"
 		echo "username	- pppoe username"
 		echo "passwd		- pppoe password"
@@ -140,6 +149,7 @@ help_usage() {
 		echo "pptp parameter:"
 		echo "ifname		- interface device name"
 		echo "mtu		- mtu"
+		echo "mac		- macaddr"
 		echo "server		- pptp server"
 		echo "username	- pptp username"
 		echo "passwd		- pptp password"
@@ -155,6 +165,7 @@ help_usage() {
 		echo "ipaddr		- interface ip address"
 		echo "netmask		- interface netmask"
 		echo "gateway		- interface gateway"
+		echo "mac			- macaddr"
 		echo ""
 		echo "example:"
 		echo "pre_del=1 ifname='eth0.2.0 eth0.3.0 eth0.4.0 eth0.5.0' ipaddr=192.168.1.1 netmask=255.255.255.0 /usr/sbin/net_add.sh bridge lan"
@@ -163,6 +174,7 @@ help_usage() {
 	elif [ "$proto" = "none" ]; then
 		echo "none parameter:"
 		echo "ifname		- interface device name"
+		echo "mac			- macaddr"
 		echo ""
 		echo "example:"
 		echo "pre_del=1 ifname=eth0 /usr/sbin/net_add.sh none wan0"
