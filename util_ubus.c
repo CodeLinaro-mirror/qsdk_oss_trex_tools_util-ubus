@@ -1290,6 +1290,3 @@ find_child_by_section_type(char *section_relation_file, char *child_config, char
 	//return number of elements in found_child_section_index[]
 	return (child_section_index+1);
 }
-
-
-

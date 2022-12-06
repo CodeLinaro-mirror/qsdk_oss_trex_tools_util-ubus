@@ -96,6 +96,7 @@ check_config_file(char *package)
 	FILE *fp;
 	char filepath[128] = "/etc/config/";
 	int needcreate = 0;
+
 	if (configName == NULL) {
 		needcreate = 1;
 	} else {
@@ -181,6 +182,7 @@ int
 uci_cmd_add(UCI_LINE * line)
 {
 	int ret;
+
 	if (strncmp(line->package, "network", strlen(line->package)) == 0)
 		ret = util_ubus_uci_add_section(line->package, "interface", line->section);
 	else
@@ -216,6 +218,7 @@ int
 uci_cmd_set(UCI_LINE * line)
 {
 	int ret;
+
 	if (line->option)
 		ret = util_ubus_uci_set(line->package, line->section, line->option, line->value);
 	else
@@ -228,6 +231,7 @@ int
 uci_cmd_del(UCI_LINE * line)
 {
 	int ret;
+
 	ret = util_ubus_uci_delete(line->package, NULL, line->section, line->option);
 	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 	return ret;
@@ -239,6 +243,7 @@ uci_cmd_add_list(UCI_LINE * line)
 	int ret, cnt = 0;
 	char buf[256];
 	char *arr_value[16],*strpt;
+
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
 	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
 
@@ -270,6 +275,7 @@ uci_cmd_del_list(UCI_LINE * line)
 	int ret, i, match=0, cnt = 0;
 	char buf[256];
 	char *arr_value[16], *strpt;
+
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf,
 			sizeof(buf) - 1);
 	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
@@ -304,6 +310,7 @@ uci_cmd_get(UCI_LINE * line)
 	int ret;
 	char buf[256];
 	char *name, *value;
+
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
 	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
 	if (ret >= 0) {
@@ -329,6 +336,7 @@ int
 uci_cmd_changes(UCI_LINE * line)
 {
 	int ret;
+
 	ret = util_ubus_uci_dump_changes(line->package);
 	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 	return ret;
@@ -338,6 +346,7 @@ int
 uci_cmd_commit(UCI_LINE * line)
 {
 	int ret;
+
 	if (line->package)
 		ret = util_ubus_uci_commit(line->package);
 	else
@@ -351,6 +360,7 @@ uci_cmd_restart(UCI_LINE * line)
 {
 	int ret;
 	char cmd[64] = { 0 };
+
 	if (line->package) {
 		snprintf(cmd, 63, "ifdown %s", line->package);
 		ret = system(cmd);
@@ -398,6 +408,7 @@ int
 uci_run(UCI_LINE * line)
 {
 	int ret = -1;
+
 	if (line->cmd_idx >= UCI_CMD_ADD && line->cmd_idx < __UCI_CMD_MAX)
 		ret = uci_cmd_dispatch[line->cmd_idx].func(line);
 	else
@@ -443,6 +454,7 @@ main(int argc, char *argv[])
 	FILE *input = stdin;
 	UCI_LINE uci_line;
 	const char *dbg_str = getenv("UTIL_DBG");
+
 	if (dbg_str) {
 		dbg_level = atoi(dbg_str);
 		//printf("dbg_level=%d\n",dbg_level);
@@ -497,6 +509,7 @@ main(int argc, char *argv[])
 			return 0;
 		}
 	}
+
 	uci_line_init(&uci_line, 0);
 	while (!feof(input)) {
 		lineSize = getline(&line, &len, input);
@@ -518,6 +531,7 @@ main(int argc, char *argv[])
 		}
 
 	}
+
 	util_ubus_client_finish();
 	if (input != stdin)
 		fclose(input);
