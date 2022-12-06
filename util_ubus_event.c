@@ -1,3 +1,21 @@
+/******************************************************************
+ *
+ * Copyright (C) 2022 Opticore Technologies, Inc.
+ * All Rights Reserved.
+ *
+ * This program is the proprietary software of Opticore Technologies
+ * and/or its licensors, and only be used, duplicated, modified or
+ * distributed under the authorized license from Opticore Technologies.
+ *
+ * ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
+ * THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
+ *
+ * Purpose : /etc/config mib access tool through ubus
+ * Module  : util_ubus
+ * File    : util_ubus_event.c
+ *
+ ******************************************************************/
+
 #include <libubox/uloop.h>
 #include <libubox/ustream.h>
 #include <libubox/utils.h>
