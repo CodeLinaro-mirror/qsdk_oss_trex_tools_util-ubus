@@ -15,10 +15,10 @@ struct prog_attr {
 };
 #define PROG_MAX	8
 static struct prog_attr uri_list[PROG_MAX] = {
-	{ "program_beijing", 1 },
-	{ "program_guangzhou", 2 },
-	{ "program_shanghai", 3 },
-	{ "", -1 },
+	{"program_beijing", 1},
+	{"program_guangzhou", 2},
+	{"program_shanghai", 3},
+	{"", -1},
 };
 
 enum {
@@ -27,7 +27,7 @@ enum {
 };
 
 static const struct blobmsg_policy scan_policy[SCAN_POLICY_MAX] = {
-	[SCAN_CHNID] = {.name = "chnID",.type = BLOBMSG_TYPE_INT32 },
+	[SCAN_CHNID] = {.name = "chnID",.type = BLOBMSG_TYPE_INT32},
 };
 
 static int

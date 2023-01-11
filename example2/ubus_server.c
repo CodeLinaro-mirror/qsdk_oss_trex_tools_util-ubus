@@ -29,8 +29,8 @@ enum {
 };
 
 static const struct blobmsg_policy hello_policy[] = {
-	[HELLO_ID] = { .name = "id", .type = BLOBMSG_TYPE_INT32 },
-	[HELLO_MSG] = { .name = "msg", .type = BLOBMSG_TYPE_STRING },
+	[HELLO_ID] = {.name = "id",.type = BLOBMSG_TYPE_INT32},
+	[HELLO_MSG] = {.name = "msg",.type = BLOBMSG_TYPE_STRING},
 };
 
 struct hello_request {
@@ -41,7 +41,8 @@ struct hello_request {
 	char data[];
 };
 
-static void test_hello_fd_reply(struct uloop_timeout *t)
+static void
+test_hello_fd_reply(struct uloop_timeout *t)
 {
 	struct hello_request *req = container_of(t, struct hello_request, timeout);
 	char *data;
@@ -57,7 +58,8 @@ static void test_hello_fd_reply(struct uloop_timeout *t)
 	uloop_timeout_set(&req->timeout, 1000);
 }
 
-static void test_hello_reply(struct uloop_timeout *t)
+static void
+test_hello_reply(struct uloop_timeout *t)
 {
 	struct hello_request *req = container_of(t, struct hello_request, timeout);
 	int fds[2];
@@ -78,9 +80,9 @@ static void test_hello_reply(struct uloop_timeout *t)
 	test_hello_fd_reply(t);
 }
 
-static int test_hello(struct ubus_context *ctx, struct ubus_object *obj,
-		      struct ubus_request_data *req, const char *method,
-		      struct blob_attr *msg)
+static int
+test_hello(struct ubus_context *ctx, struct ubus_object *obj,
+	   struct ubus_request_data *req, const char *method, struct blob_attr *msg)
 {
 	struct hello_request *hreq;
 	struct blob_attr *tb[__HELLO_MAX];
@@ -112,21 +114,19 @@ enum {
 };
 
 static const struct blobmsg_policy watch_policy[__WATCH_MAX] = {
-	[WATCH_ID] = { .name = "id", .type = BLOBMSG_TYPE_INT32 },
-	[WATCH_COUNTER] = { .name = "counter", .type = BLOBMSG_TYPE_INT32 },
+	[WATCH_ID] = {.name = "id",.type = BLOBMSG_TYPE_INT32},
+	[WATCH_COUNTER] = {.name = "counter",.type = BLOBMSG_TYPE_INT32},
 };
 
 static void
-test_handle_remove(struct ubus_context *ctx, struct ubus_subscriber *s,
-                   uint32_t id)
+test_handle_remove(struct ubus_context *ctx, struct ubus_subscriber *s, uint32_t id)
 {
 	fprintf(stderr, "Object %08x went away\n", id);
 }
 
 static int
 test_notify(struct ubus_context *ctx, struct ubus_object *obj,
-	    struct ubus_request_data *req, const char *method,
-	    struct blob_attr *msg)
+	    struct ubus_request_data *req, const char *method, struct blob_attr *msg)
 {
 #if 0
 	char *str;
@@ -139,9 +139,9 @@ test_notify(struct ubus_context *ctx, struct ubus_object *obj,
 	return 0;
 }
 
-static int test_watch(struct ubus_context *ctx, struct ubus_object *obj,
-		      struct ubus_request_data *req, const char *method,
-		      struct blob_attr *msg)
+static int
+test_watch(struct ubus_context *ctx, struct ubus_object *obj,
+	   struct ubus_request_data *req, const char *method, struct blob_attr *msg)
 {
 	struct blob_attr *tb[__WATCH_MAX];
 	int ret;
@@ -158,19 +158,19 @@ static int test_watch(struct ubus_context *ctx, struct ubus_object *obj,
 }
 
 enum {
-    COUNT_TO,
-    COUNT_STRING,
-    __COUNT_MAX
+	COUNT_TO,
+	COUNT_STRING,
+	__COUNT_MAX
 };
 
 static const struct blobmsg_policy count_policy[__COUNT_MAX] = {
-    [COUNT_TO] = { .name = "to", .type = BLOBMSG_TYPE_INT32 },
-    [COUNT_STRING] = { .name = "string", .type = BLOBMSG_TYPE_STRING },
+	[COUNT_TO] = {.name = "to",.type = BLOBMSG_TYPE_INT32},
+	[COUNT_STRING] = {.name = "string",.type = BLOBMSG_TYPE_STRING},
 };
 
-static int test_count(struct ubus_context *ctx, struct ubus_object *obj,
-		      struct ubus_request_data *req, const char *method,
-		      struct blob_attr *msg)
+static int
+test_count(struct ubus_context *ctx, struct ubus_object *obj,
+	   struct ubus_request_data *req, const char *method, struct blob_attr *msg)
 {
 	struct blob_attr *tb[__COUNT_MAX];
 	char *s1, *s2;
@@ -201,8 +201,7 @@ static const struct ubus_method test_methods[] = {
 	UBUS_METHOD("count", test_count, count_policy),
 };
 
-static struct ubus_object_type test_object_type =
-	UBUS_OBJECT_TYPE("test", test_methods);
+static struct ubus_object_type test_object_type = UBUS_OBJECT_TYPE("test", test_methods);
 
 static struct ubus_object test_object = {
 	.name = "test",
@@ -211,7 +210,8 @@ static struct ubus_object test_object = {
 	.n_methods = ARRAY_SIZE(test_methods),
 };
 
-static void server_main(void)
+static void
+server_main(void)
 {
 	int ret;
 
@@ -226,7 +226,8 @@ static void server_main(void)
 	uloop_run();
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	const char *ubus_socket = NULL;
 	int ch;

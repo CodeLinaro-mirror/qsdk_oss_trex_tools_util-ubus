@@ -26,7 +26,13 @@
 #include <json-c/json.h>
 #include <libubox/blobmsg_json.h>
 
-static inline char *util_purename(char *path) { char *delim=rindex(path, '/'); return delim?(delim+1):path; }
+static inline char *
+util_purename(char *path)
+{
+	char *delim = rindex(path, '/');
+	return delim ? (delim + 1) : path;
+}
+
 #define dbprintf(fmt, args...)		do { fprintf(stderr,"%s:%d: %s(): " fmt, util_purename(__FILE__), __LINE__, __FUNCTION__, ##args); } while (0)
 
 #define UTIL_UBUS_DEBUG_DEFAULT		0
@@ -71,7 +77,10 @@ int util_ubus_uci_apply(int rollback_enable, unsigned int auto_rollback_timeout)
 int util_ubus_uci_confirm(void);
 int util_ubus_uci_rollback(void);
 int util_ubus_uci_dump_changes(char *config);
-int find_parent_by_section_type(char *section_relation_file, char *child_config, char *child_section_type, int child_section_index, char *parent_config, char *parent_section_type);
-int find_child_by_section_type(char *section_relation_file, char *child_config, char *child_section_type, int *found_child_section_index, int child_section_index_size, char *parent_config, char *parent_section_type, int parent_section_index);
+int find_parent_by_section_type(char *section_relation_file, char *child_config, char *child_section_type,
+				int child_section_index, char *parent_config, char *parent_section_type);
+int find_child_by_section_type(char *section_relation_file, char *child_config, char *child_section_type,
+			       int *found_child_section_index, int child_section_index_size, char *parent_config,
+			       char *parent_section_type, int parent_section_index);
 
 #endif

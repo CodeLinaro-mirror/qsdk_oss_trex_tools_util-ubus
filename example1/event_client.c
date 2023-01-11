@@ -12,8 +12,7 @@ static const char *cli_path;
 #define	UBUS_EVENT_REMOVE_DEVICE	"rm_device"
 
 static void
-ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
-			const char *type, struct blob_attr *msg)
+ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_handler *ev, const char *type, struct blob_attr *msg)
 {
 	char *str;
 

@@ -242,22 +242,22 @@ uci_cmd_add_list(UCI_LINE * line)
 {
 	int ret, cnt = 0;
 	char buf[256];
-	char *arr_value[16],*strpt;
+	char *arr_value[16], *strpt;
 
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
 	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
 
 	strpt = strtok(buf, " ");
 	while (strpt != NULL) {
-		if(strcmp(strpt,line->value)==0)
+		if (strcmp(strpt, line->value) == 0)
 			return 0;
 		else
 			arr_value[cnt++] = strpt;
-		if ( cnt >= 16 )
+		if (cnt >= 16)
 			break;
 		strpt = strtok(NULL, " ");
 	}
-	if(cnt<16)
+	if (cnt < 16)
 		arr_value[cnt++] = line->value;
 	else
 		return -1;
@@ -272,32 +272,30 @@ uci_cmd_add_list(UCI_LINE * line)
 int
 uci_cmd_del_list(UCI_LINE * line)
 {
-	int ret, i, match=0, cnt = 0;
+	int ret, i, match = 0, cnt = 0;
 	char buf[256];
 	char *arr_value[16], *strpt;
 
-	ret = util_ubus_uci_get(line->package, line->section, line->option, buf,
-			sizeof(buf) - 1);
+	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
 	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
 
 	strpt = strtok(buf, " ");
 	while (strpt != NULL) {
 		arr_value[cnt++] = strpt;
-		if ( cnt >= 16 )
+		if (cnt >= 16)
 			break;
 		strpt = strtok(NULL, " ");
 	}
-	for(i=0;i<cnt;i++) {
-		if(match && i<cnt-1)
-			arr_value[i]=arr_value[i+1];
-		else if(strcmp(arr_value[i],line->value)==0) {
-			match=1;
-			arr_value[i]=arr_value[i+1];
+	for (i = 0; i < cnt; i++) {
+		if (match && i < cnt - 1)
+			arr_value[i] = arr_value[i + 1];
+		else if (strcmp(arr_value[i], line->value) == 0) {
+			match = 1;
+			arr_value[i] = arr_value[i + 1];
 		}
 	}
-	if ( line->option )
-		ret = util_ubus_uci_set_list(line->package, line->section, line->option,
-				arr_value, cnt-match);
+	if (line->option)
+		ret = util_ubus_uci_set_list(line->package, line->section, line->option, arr_value, cnt - match);
 	else
 		ret = UBUS_STATUS_NOT_FOUND;
 	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
@@ -380,16 +378,16 @@ typedef struct {
 } uci_dispatchTable;
 
 uci_dispatchTable uci_cmd_dispatch[] = {
-	[UCI_CMD_ADD] = { "add", uci_cmd_add },
-	[UCI_CMD_SET] = { "set", uci_cmd_set },
-	[UCI_CMD_DEL] = { "del", uci_cmd_del },
-	[UCI_CMD_GET] = { "get", uci_cmd_get },
-	[UCI_CMD_SETLIST] = { "set_list", uci_cmd_setlist },
-	[UCI_CMD_ADDLIST] = { "add_list",uci_cmd_add_list },
-	[UCI_CMD_DELLIST] = { "del_list",uci_cmd_del_list },
-	[UCI_CMD_CHANGES] = { "changes", uci_cmd_changes },
-	[UCI_CMD_COMMIT] = { "commit", uci_cmd_commit },
-	[UCI_CMD_RESTART] = { "restart", uci_cmd_restart }
+	[UCI_CMD_ADD] = {"add", uci_cmd_add},
+	[UCI_CMD_SET] = {"set", uci_cmd_set},
+	[UCI_CMD_DEL] = {"del", uci_cmd_del},
+	[UCI_CMD_GET] = {"get", uci_cmd_get},
+	[UCI_CMD_SETLIST] = {"set_list", uci_cmd_setlist},
+	[UCI_CMD_ADDLIST] = {"add_list", uci_cmd_add_list},
+	[UCI_CMD_DELLIST] = {"del_list", uci_cmd_del_list},
+	[UCI_CMD_CHANGES] = {"changes", uci_cmd_changes},
+	[UCI_CMD_COMMIT] = {"commit", uci_cmd_commit},
+	[UCI_CMD_RESTART] = {"restart", uci_cmd_restart}
 };
 
 int numdispatch = sizeof(uci_cmd_dispatch) / sizeof(uci_cmd_dispatch[0]);
@@ -420,27 +418,27 @@ void
 print_help(void)
 {
 	printf("util_uci: a uci like tool that uses rpcd session for config access\n\n"
-		"syntax:\n"
-		"util_uci [rdonly cmds...]\n"
-		"util_uci [-f <filename>]\n"
-		"util_uci << EOF\n"
-		"...\n"
-		"EOF\n"
-		"\n"
-		"supported cmd:\n"
-		"add      <config> <section>\n"
-		"set      <config>.<section>[.<option>]=<value>\n"
-		"get      <config>.<section>[.<option>]\n"
-		"del      <config>.<section>[.<option>]\n"
-		"set_list <config>.<section>.<option>=<value1> <value2> <value3>\n"
-		"add_list <config>.<section>.<option>=<value>\n"
-		"del_list <config>.<section>.<option>=<value>\n"
-		"changes  <config>\n"
-		"commit  [<config>]\n"
-		"restart [lan | wan]\n"
-		"\n"
-		"ps: commit is required for write cmds, so -f or stdin should be used\n"
-		"    setting env UTIL_DBG to 1 will enable debug msg in detail\n");
+	       "syntax:\n"
+	       "util_uci [rdonly cmds...]\n"
+	       "util_uci [-f <filename>]\n"
+	       "util_uci << EOF\n"
+	       "...\n"
+	       "EOF\n"
+	       "\n"
+	       "supported cmd:\n"
+	       "add      <config> <section>\n"
+	       "set      <config>.<section>[.<option>]=<value>\n"
+	       "get      <config>.<section>[.<option>]\n"
+	       "del      <config>.<section>[.<option>]\n"
+	       "set_list <config>.<section>.<option>=<value1> <value2> <value3>\n"
+	       "add_list <config>.<section>.<option>=<value>\n"
+	       "del_list <config>.<section>.<option>=<value>\n"
+	       "changes  <config>\n"
+	       "commit  [<config>]\n"
+	       "restart [lan | wan]\n"
+	       "\n"
+	       "ps: commit is required for write cmds, so -f or stdin should be used\n"
+	       "    setting env UTIL_DBG to 1 will enable debug msg in detail\n");
 }
 
 int

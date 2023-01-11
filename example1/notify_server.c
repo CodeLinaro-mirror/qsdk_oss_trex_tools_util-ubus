@@ -50,7 +50,7 @@ notifier_main(void)
 		ubus_notify(ctx, &test_object, "say Hi!", NULL, -1);
 		printf("obj->has_subscribers=%d\n", test_object.has_subscribers);
 		printf("cb_counter=%d\n", cb_counter);
-		
+
 	}
 }
 

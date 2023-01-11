@@ -21,7 +21,8 @@
 static struct ubus_context *ctx;
 static struct blob_buf b;
 
-static void test_client_subscribe_cb(struct ubus_context *ctx, struct ubus_object *obj)
+static void
+test_client_subscribe_cb(struct ubus_context *ctx, struct ubus_object *obj)
 {
 	fprintf(stderr, "Subscribers active: %d\n", obj->has_subscribers);
 }
@@ -30,7 +31,8 @@ static struct ubus_object test_client_object = {
 	.subscribe_cb = test_client_subscribe_cb,
 };
 
-static void test_client_notify_cb(struct uloop_timeout *timeout)
+static void
+test_client_notify_cb(struct uloop_timeout *timeout)
 {
 	static int counter = 0;
 	int err;
@@ -61,15 +63,15 @@ enum {
 };
 
 static const struct blobmsg_policy return_policy[__RETURN_MAX] = {
-	[RETURN_CODE] = { .name = "rc", .type = BLOBMSG_TYPE_INT32 },
+	[RETURN_CODE] = {.name = "rc",.type = BLOBMSG_TYPE_INT32},
 };
 
-static void test_count_data_cb(struct ubus_request *req,
-				    int type, struct blob_attr *msg)
+static void
+test_count_data_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 {
 	struct blob_attr *tb[__RETURN_MAX];
 	int rc;
-	uint32_t count_to = *(uint32_t *)req->priv;
+	uint32_t count_to = *(uint32_t *) req->priv;
 
 	blobmsg_parse(return_policy, __RETURN_MAX, tb, blob_data(msg), blob_len(msg));
 
@@ -84,12 +86,13 @@ static void test_count_data_cb(struct ubus_request *req,
 		fprintf(stderr, "Server validated our count up to '%u'\n", count_to);
 }
 
-static void test_count(struct uloop_timeout *timeout)
+static void
+test_count(struct uloop_timeout *timeout)
 {
 	enum {
 		COUNT_TO_MIN = 10000,
 		COUNT_TO_MAX = 1000000,
-		PROGRESSION  = 100,
+		PROGRESSION = 100,
 	};
 
 	uint32_t id;
@@ -110,8 +113,7 @@ static void test_count(struct uloop_timeout *timeout)
 		return;
 	}
 
-	fprintf(stderr, "Sending count up to '%u'; string has length '%u'\n",
-	        count_to, (uint32_t)strlen(s));
+	fprintf(stderr, "Sending count up to '%u'; string has length '%u'\n", count_to, (uint32_t) strlen(s));
 	blob_buf_init(&b, 0);
 	blobmsg_add_u32(&b, "to", count_to);
 	blobmsg_add_string(&b, "string", s);
@@ -137,7 +139,8 @@ static struct uloop_timeout count_timer = {
 	.cb = test_count,
 };
 
-static void test_client_fd_data_cb(struct ustream *s, int bytes)
+static void
+test_client_fd_data_cb(struct ustream *s, int bytes)
 {
 	char *data, *sep;
 	int len;
@@ -155,7 +158,8 @@ static void test_client_fd_data_cb(struct ustream *s, int bytes)
 	ustream_consume(s, sep + 1 - data);
 }
 
-static void test_client_fd_cb(struct ubus_request *req, int fd)
+static void
+test_client_fd_cb(struct ubus_request *req, int fd)
 {
 	static struct ustream_fd test_fd;
 
@@ -165,12 +169,14 @@ static void test_client_fd_cb(struct ubus_request *req, int fd)
 	ustream_fd_init(&test_fd, fd);
 }
 
-static void test_client_complete_cb(struct ubus_request *req, int ret)
+static void
+test_client_complete_cb(struct ubus_request *req, int ret)
 {
 	fprintf(stderr, "completed request, ret: %d\n", ret);
 }
 
-static void client_main(void)
+static void
+client_main(void)
 {
 	static struct ubus_request req;
 	uint32_t id;
@@ -204,7 +210,8 @@ static void client_main(void)
 	uloop_run();
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	const char *ubus_socket = NULL;
 	int ch;

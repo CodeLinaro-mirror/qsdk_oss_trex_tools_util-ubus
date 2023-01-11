@@ -24,7 +24,7 @@
 #include <libubox/blobmsg_json.h>
 
 #define UBUS_EVENT_CTL			"util_ubus_event_ctl"
-//#define UBUS_EVENT_REMOVE_DEVICE	"rm_device"
+//#define UBUS_EVENT_REMOVE_DEVICE      "rm_device"
 #define UBUS_EVENT_ALL			"*"
 #define UBUS_EVENT_NETWORK		"network.interface"
 #define RULEFILE			"util_event_rule.txt"
@@ -35,6 +35,7 @@ util_purename(char *path)
 	char *delim = rindex(path, '/');
 	return delim ? (delim + 1) : path;
 }
+
 #define dbprintf(fmt, args...)      do { if(dbg_level) fprintf(stderr,"%s:%d: %s(): " fmt, util_purename(__FILE__), __LINE__, __FUNCTION__, ##args); } while (0)
 
 typedef struct __ubus_event_t__ {

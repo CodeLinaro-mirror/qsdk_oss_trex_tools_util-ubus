@@ -89,9 +89,9 @@ main(int argc, char *argv[])
 	dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 	// uci set list values
 	{
-	char *values[] = { "1.ucitest.org", "11.ucitest.org", "111.ucitest.org"};
-	ret = util_ubus_uci_set_list("ucitest", "ntp", "server", values, 3);
-	dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
+		char *values[] = { "1.ucitest.org", "11.ucitest.org", "111.ucitest.org" };
+		ret = util_ubus_uci_set_list("ucitest", "ntp", "server", values, 3);
+		dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 	}
 	// dump changes
 	util_ubus_uci_dump_changes("ucitest");
@@ -120,8 +120,8 @@ main(int argc, char *argv[])
 	ret = util_ubus_uci_apply(1, 3);
 	dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 	// value change is lost since CONFIRM is not called after APPLY
-	sleep(5);	// wait auto rollback to take effect
-	
+	sleep(5);		// wait auto rollback to take effect
+
 // UCI_SET && APPLY (rollback_enabled), then CONFIRM
 	// uci set single value
 	ret = util_ubus_uci_set("ucitest", "@system[0]", "hostname", "ucitest4");
@@ -179,9 +179,9 @@ main(int argc, char *argv[])
 		int i = 0;
 
 		printf("time0=%lu\n", (unsigned long)time(0));
-		for (i=0; i < 10000; i++) {
-			if ((i%1000) == 999) {
-				if (argv[1]) 
+		for (i = 0; i < 10000; i++) {
+			if ((i % 1000) == 999) {
+				if (argv[1])
 					printf("%s time %d=%lu\n", argv[1], i, (unsigned long)time(0));
 				else
 					printf("time %d=%lu\n", i, (unsigned long)time(0));
@@ -196,10 +196,9 @@ main(int argc, char *argv[])
 		ret = util_ubus_uci_get("ucitest", "@system[0]", "hostname", value, 129);
 		dbprintf("ret=%d(%s), value=%s\n\n", ret, util_ubus_error_str(ret), value);
 	}
-
 // FIND SECTION RELATED
 	//test find_parent_by_section_type
-	ret=find_parent_by_section_type(NULL, "twireless", "wifi-iface", 1, "twireless", "wifi-device");
+	ret = find_parent_by_section_type(NULL, "twireless", "wifi-iface", 1, "twireless", "wifi-device");
 	if (ret >= 0) {
 		char tmpbuf[129];
 		dbprintf("index=%d\n\n", ret);
@@ -209,7 +208,7 @@ main(int argc, char *argv[])
 	} else
 		dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 
-	ret=find_parent_by_section_type(NULL, "twireless", "wifi-iface", 3, "twireless", "wifi-device");
+	ret = find_parent_by_section_type(NULL, "twireless", "wifi-iface", 3, "twireless", "wifi-device");
 	if (ret >= 0) {
 		char tmpbuf[129];
 		dbprintf("index=%d\n\n", ret);
@@ -220,20 +219,21 @@ main(int argc, char *argv[])
 		dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 
 	// error case
-	ret=find_parent_by_section_type(NULL, "twireless", "wifi-iface", 0, "twireless", "wifi-ice");
+	ret = find_parent_by_section_type(NULL, "twireless", "wifi-iface", 0, "twireless", "wifi-ice");
 	if (ret >= 0)
 		dbprintf("index=%d\n\n", ret);
 	else
 		dbprintf("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 
-
 	// test find_child_by_section_type
 	{
 		int found_child_section_index[10], i;
-		ret=find_child_by_section_type(NULL, "twireless", "wifi-iface", found_child_section_index, 10, "twireless", "wifi-device", 0);
+		ret =
+		    find_child_by_section_type(NULL, "twireless", "wifi-iface", found_child_section_index, 10, "twireless",
+					       "wifi-device", 0);
 		dbprintf("ret=%d, dump index[]=", ret);
 		if (ret >= 0) {
-			for(i=0; i < ret; i++)
+			for (i = 0; i < ret; i++)
 				fprintf(stderr, "%d ", found_child_section_index[i]);
 			fprintf(stderr, "\n");
 		} else {
@@ -243,10 +243,12 @@ main(int argc, char *argv[])
 
 	{
 		int found_child_section_index[10], i;
-		ret=find_child_by_section_type(NULL, "twireless", "wifi-iface", found_child_section_index, 10, "twireless", "wifi-device", 1);
+		ret =
+		    find_child_by_section_type(NULL, "twireless", "wifi-iface", found_child_section_index, 10, "twireless",
+					       "wifi-device", 1);
 		dbprintf("ret=%d, dump index[]=", ret);
 		if (ret >= 0) {
-			for(i=0; i < ret; i++)
+			for (i = 0; i < ret; i++)
 				fprintf(stderr, "%d ", found_child_section_index[i]);
 			fprintf(stderr, "\n");
 		} else {
@@ -257,10 +259,12 @@ main(int argc, char *argv[])
 	// error case 1
 	{
 		int found_child_section_index[1], i;
-		ret=find_child_by_section_type(NULL, "twireless", "wifi-iface", found_child_section_index, 1, "twireless", "wifi-device", 0);
+		ret =
+		    find_child_by_section_type(NULL, "twireless", "wifi-iface", found_child_section_index, 1, "twireless",
+					       "wifi-device", 0);
 		dbprintf("ret=%d, dump index[]=", ret);
 		if (ret >= 0) {
-			for(i=0; i < ret; i++)
+			for (i = 0; i < ret; i++)
 				fprintf(stderr, "%d ", found_child_section_index[i]);
 			fprintf(stderr, "\n");
 		} else {
@@ -271,10 +275,12 @@ main(int argc, char *argv[])
 	// error case 2
 	{
 		int found_child_section_index[10], i;
-		ret=find_child_by_section_type(NULL, "twireless", "wifi--iface", found_child_section_index, 10, "twireless", "wifi-device", 0);
+		ret =
+		    find_child_by_section_type(NULL, "twireless", "wifi--iface", found_child_section_index, 10, "twireless",
+					       "wifi-device", 0);
 		dbprintf("ret=%d, dump index[]=", ret);
 		if (ret >= 0) {
-			for(i=0; i < ret; i++)
+			for (i = 0; i < ret; i++)
 				fprintf(stderr, "%d ", found_child_section_index[i]);
 			fprintf(stderr, "\n");
 		} else {
@@ -285,10 +291,12 @@ main(int argc, char *argv[])
 	// error case 3
 	{
 		int found_child_section_index[10], i;
-		ret=find_child_by_section_type(NULL, "twireless", "wifi-iface", found_child_section_index, 10, "twireless", "wifi--device", 0);
+		ret =
+		    find_child_by_section_type(NULL, "twireless", "wifi-iface", found_child_section_index, 10, "twireless",
+					       "wifi--device", 0);
 		dbprintf("ret=%d, dump index[]=", ret);
 		if (ret >= 0) {
-			for(i=0; i < ret; i++)
+			for (i = 0; i < ret; i++)
 				fprintf(stderr, "%d ", found_child_section_index[i]);
 			fprintf(stderr, "\n");
 		} else {

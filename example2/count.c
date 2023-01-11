@@ -16,33 +16,34 @@
 #include <stdlib.h>
 #include "count.h"
 
-char *count_to_number(uint32_t num)
+char *
+count_to_number(uint32_t num)
 {
 	uint32_t ptr = 0, size = 0;
 	uint32_t written = 0, i;
 	int new_line_every_n_numbers = 30;
 	char *s;
 
-	for (i=0; i < num; ++i) {
+	for (i = 0; i < num; ++i) {
 		size += snprintf(NULL, 0, "%u ", i);
 		if (i > 0 && i % new_line_every_n_numbers == 0)
 			size++;
 	}
-	size++; /* one for null char */
+	size++;			/* one for null char */
 
 	s = calloc(size, sizeof(char));
 	if (!s)
 		goto out;
 
-	for (i=0; i < num; ++i) {
+	for (i = 0; i < num; ++i) {
 		written = sprintf(&s[ptr], "%u ", i);
-		ptr  += written;
+		ptr += written;
 		if (i > 0 && i % new_line_every_n_numbers == 0) {
 			sprintf(&s[ptr], "\n");
 			ptr++;
 		}
 	}
 
-out:
+      out:
 	return s;
 }

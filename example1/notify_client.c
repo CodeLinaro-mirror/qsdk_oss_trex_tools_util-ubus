@@ -15,7 +15,7 @@ test_notify(struct ubus_context *ctx, struct ubus_object *obj,
 	    struct ubus_request_data *req, const char *method, struct blob_attr *msg)
 {
 	char *str;
-	
+
 	printf("notify handler...\n");
 	if (msg) {
 		str = blobmsg_format_json_indent(msg, true, -1);
