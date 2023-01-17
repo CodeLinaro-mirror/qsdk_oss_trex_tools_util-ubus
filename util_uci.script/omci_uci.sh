@@ -2,57 +2,83 @@
 SCRIPT=$0
 echo "">/dev/null
 
+# $1: omci global option
 r_omci() {
-
 	[ -z "$1" ] && return 1
-	
+
 	local ret_val=`uci -q get omci.global.$1 | sed 's/^[ \t]*//g'`
-	
+
 	echo -ne $ret_val
 	return 0
 }
 
+# $1: omci global option
+# $2: omci global option value
 w_omci() {
 	[ -z "$1" -o -z "$2" ]&& return 1
-	
+
 	echo set omci.global.$1=$2 >> $tmpfile
 	return 0
 }
 
+# $1: uci section
+# $2: uci option
 r_omci_option() {
-
 	[ -z "$1" -o -z "$2" ] && return 1
-	
+
 	local ret_val=`uci -q get omci.$1.$2 | sed 's/^[ \t]*//g'`
 
 	echo -ne $ret_val
 	return 0
 }
+
+# $1: uci section
+# $2: uci option
+# $3: uci option value
 w_omci_option() {
 	[ -z "$1" -o -z "$2" -o -z "$3" ]&& return 1
-	
+
 	echo set omci.$1.$2=$3 >> $tmpfile
 	return 0
 }
 
-w_system(){
+# $1: uci array index
+# $2: uci section
+# $3: uci option
+r_omci_array_option() {
+	[ -z "$1" -o -z "$2" -o -z "$3" ] && return 1
 
+	local ret_val=$(eval uci -q get omci.@$2[$1].$3 | sed 's/^[ \t]*//g')
+
+	echo -ne $ret_val
+	return 0
+}
+
+# $1: uci array index
+# $2: uci section
+# $3: uci option
+# $4: uci option value
+w_omci_array_option() {
+	[ -z "$1" -o -z "$2" -o -z "$3" -o -z "$4" ]&& return 1
+	
+	eval "echo set omci.@$2[$1].$3=$4 >> $tmpfile"
+	return 0
+}
+
+w_system(){
 	[ -z "$1" -o -z "$2" ]&& return 1
 	
 	echo set system.@system[0].$1=$2 >> $tmpfile
 	return 0
-
 }
 
 r_system(){
-
 	[ -z "$1" ] && return 1
 	
 	local ret_val=`uci -q get system.@system[0].$1 | sed 's/^[ \t]*//g'`
 	
 	echo $ret_val
 	return 0
-
 }
 
 r_ntp() {
@@ -64,7 +90,7 @@ r_ntp() {
 	return 0
 }
 
-r_ntp_all() {	
+r_ntp_all() {
 	local ret_val=`uci -q show system.ntp`
 	
 	echo $ret_val
@@ -90,8 +116,9 @@ system_restart(){
 }
 
 help_short() {
-	echo "r_omci|w_omci|r_omci_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list"	
+	echo "r_omci|w_omci|r_omci_option|w_omci_option|r_omci_array_option|w_omci_array_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list"
 }
+
 if [ -z "$1" ]; then
 	help_short
 	exit 1
@@ -99,7 +126,7 @@ fi
 
 proto=$1
 case $proto in
-	r_omci|w_omci|r_omci_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list) ;;
+	r_omci|w_omci|r_omci_option|r_omci_array_option|w_omci_array_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list) ;;
 	*) help_short; exit 1;;
 esac
 
@@ -107,17 +134,19 @@ tmpfile=/var/run/omci_cfgh.$proto.$$
 echo "" > $tmpfile
 
 case $proto in
-	r_omci)	r_omci $2;;
-	w_omci)	w_omci $2 $3;;	
-	r_system) r_system $2;;
-	w_system)	w_system $2 $3;;
-	w_ntp)	w_ntp $2 $3;;
-	r_ntp)	r_ntp $2;;	
-	sys_restart) system_restart;;
-	w_ntp_list) w_ntp_list $2 $3;;
-	r_omci_option)	r_omci_option $2 $3;;
-	w_omci_option)	w_omci_option $2 $3 $4;;	
-	*)	add_none;;
+	r_omci)			r_omci $2;;
+	w_omci)			w_omci $2 $3;;
+	r_system)		r_system $2;;
+	w_system)		w_system $2 $3;;
+	w_ntp)			w_ntp $2 $3;;
+	r_ntp)			r_ntp $2;;
+	sys_restart)		system_restart;;
+	w_ntp_list)		w_ntp_list $2 $3;;
+	r_omci_option)		r_omci_option $2 $3;;
+	w_omci_option)		w_omci_option $2 $3 $4;;
+	r_omci_array_option)	r_omci_array_option $2 $3 $4;;
+	w_omci_array_option)	w_omci_array_option $2 $3 $4 $5;;
+	*)			add_none;;
 esac
 
 if [ $? != "0" ] ; then
@@ -126,7 +155,8 @@ if [ $? != "0" ] ; then
 	exit 1
 fi
 
-if [ "$proto" = "w_omci" -o "$proto" = "w_omci_option" ]; then
+if [ "$proto" = "w_omci" -o "$proto" = "w_omci_option" -o "$proto" = "r_omci_array_option" \
+	-o "$proto" = "w_omci_array_option" ]; then
 	echo commit omci >> $tmpfile
 	/usr/bin/util_uci -f $tmpfile
 fi 
