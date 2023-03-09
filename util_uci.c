@@ -451,11 +451,20 @@ main(int argc, char *argv[])
 	ssize_t lineSize = 0;
 	FILE *input = stdin;
 	UCI_LINE uci_line;
+	const char util_usr[]="trex", util_pwd[]="trex0001";
 	const char *dbg_str = getenv("UTIL_DBG");
+	const char *usr_str = getenv("UTIL_USR");
+	const char *pwd_str = getenv("UTIL_PWD");
 
 	if (dbg_str) {
 		dbg_level = atoi(dbg_str);
 		//printf("dbg_level=%d\n",dbg_level);
+	}
+	if (pwd_str==NULL) {
+		pwd_str=util_pwd;
+	}
+	if (usr_str==NULL) {
+		usr_str=util_usr;
 	}
 // CLIENT INIT
 	dbprintf_wanif("util_ubus_client_init\n");
@@ -464,7 +473,7 @@ main(int argc, char *argv[])
 	dbprintf_wanif("util_ubus_session_login\n");
 // SESSSION_LOGIN
 	// login with session idle timeout 60s
-	ret = util_ubus_session_login("root", "admin", 60);
+	ret = util_ubus_session_login(usr_str, pwd_str, 60);
 	dbprintf_wanif("ret=%d(%s)\n\n", ret, util_ubus_error_str(ret));
 // SESSION_VALIDATE, ret != 0 if session is invalid, session_expire means seconds to expire the rpcd session
 	dbprintf_wanif("util_ubus_session_validate\n");
