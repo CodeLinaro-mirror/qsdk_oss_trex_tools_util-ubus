@@ -32,9 +32,9 @@ ubus send util_ubus_event_ctl '{"dbg_level":1}'
 Please ref. util_event_rule.cfg
 
 * What action with network.interface event:
-network.interface,/usr/bin/set_igmp_route.sh&,action=ifup & interface=loopback  -->  run script "set_igmp_route.sh" when event is detected
+network.interface,/usr/bin/network_cb.sh&,action=ifup & interface=loopback  -->  run script "network_cb.sh" when event is detected
 
 * How to send user event:
-util_ubus_event,xxx.sh,action=test  <-- add line in util_event_rule.txt & reload rule config file
+util_ubus_event,xxx.sh,action=test  <-- add line in util_event_rule.cfg & reload rule config file
 ubus send util_ubus_event '{"action":"test"}' -> run shell "xxx.sh"
 ubus send util_ubus_event '{"action":"test","pre_param":"cmd=ttt","param":"123"}' -> run shell "cmd=ttt xxx.sh 123"

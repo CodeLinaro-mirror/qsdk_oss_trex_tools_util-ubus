@@ -575,6 +575,7 @@ main(int argc, char *argv[])
 	if (argc > 1)
 		strncpy(rulefile, argv[1], sizeof(rulefile) - 1);
 	if (read_rule_file(rulefile) == -1) {
+		printf("load %s failed!\n",rulefile);
 		client_ubus_done();
 		return -1;
 	}
