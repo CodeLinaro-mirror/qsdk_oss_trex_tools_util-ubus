@@ -29,7 +29,7 @@ or
 ubus send util_ubus_event_ctl '{"dbg_level":1}'
 
 * What event monitor by program:
-Please ref. util_event_rule.txt
+Please ref. util_event_rule.cfg
 
 * What action with network.interface event:
 network.interface,/usr/bin/set_igmp_route.sh&,action=ifup & interface=loopback  -->  run script "set_igmp_route.sh" when event is detected

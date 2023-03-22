@@ -27,7 +27,7 @@
 //#define UBUS_EVENT_REMOVE_DEVICE      "rm_device"
 #define UBUS_EVENT_ALL			"*"
 #define UBUS_EVENT_NETWORK		"network.interface"
-#define RULEFILE			"util_event_rule.txt"
+#define RULEFILE			"/etc/omci/util_event_rule.cfg"
 
 static inline char *
 util_purename(char *path)
@@ -74,7 +74,7 @@ int timer_delay = 5;
 int shell_delay = 5;
 static struct uloop_timeout timer_shutdown;
 static struct uloop_timeout timer_shell;
-char rulefile[128] = "/etc/omci/util_event_rule.txt";
+char rulefile[128] = RULEFILE;
 
 int
 init_event_head_inst(EVENT_HEAD_LIST ** inst)
@@ -580,7 +580,7 @@ main(int argc, char *argv[])
 	}
 	//init variable
 	strcpy(ifname, "eth4");
-	strcpy(script_name, "set_igmp_route.sh");
+	strcpy(script_name, "network_cb.sh");
 	trap_mode = -1;
 	fake_mode = -1;
 	client_ubus_register_events();
