@@ -64,7 +64,7 @@ typedef struct __event_head_list__ {
 static struct ubus_context *ctx = NULL;
 static const char *cli_path;
 static int shutdown = 0, shell_run = 0;
-static int trap_mode = -1, fake_mode = -1;
+static int trap_mode = -1, single_mode = -1;
 static char ifname[16] = { 0 };
 static char script_name[256] = { 0 };
 
@@ -304,8 +304,8 @@ shell_timer_cb(struct uloop_timeout *timeout)
 {
 	//char cmd[128]={0};
 
-	//snprintf(cmd, 127, "ifname=%s trap_mode=%d fake_mode=%d %s",
-	//                ifname, trap_mode, fake_mode,script_name);
+	//snprintf(cmd, 127, "ifname=%s trap_mode=%d single_mode=%d %s",
+	//                ifname, trap_mode, single_mode,script_name);
 
 	dbprintf("call script: %s\n", script_name);
 	system(script_name);
@@ -406,7 +406,7 @@ ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
 		ubus_get_objstr(msg, "script", script_name, sizeof(script_name) - 1);
 		ubus_get_objstr(msg, "ifname", ifname, sizeof(ifname) - 1);
 		ubus_get_objint(msg, "trap_mode", &trap_mode);
-		ubus_get_objint(msg, "fake_mode", &fake_mode);
+		ubus_get_objint(msg, "single_mode", &single_mode);
 		ubus_get_objint(msg, "dbg_level", &dbg_level);
 		ubus_get_objint(msg, "cfg_reload", &cfg_reload);
 		ubus_get_objint(msg, "cfg_dump", &cfg_dump);
@@ -583,7 +583,7 @@ main(int argc, char *argv[])
 	strcpy(ifname, "eth4");
 	strcpy(script_name, "network_cb.sh");
 	trap_mode = -1;
-	fake_mode = -1;
+	single_mode = -1;
 	client_ubus_register_events();
 	timer_shutdown.cb = shutdown_timer_cb;
 	timer_shell.cb = shell_timer_cb;
