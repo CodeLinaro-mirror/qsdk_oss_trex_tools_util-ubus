@@ -240,12 +240,26 @@ else
 	echo set dhcp.$interface.interface=$interface >> $tmpfile
 	echo set dhcp.$interface.ignore=1 >> $tmpfile
 	## add wan interface to firewall zone[1] (zone wan)
-	if [ "$proto" != "none" -a -z "$nonat" ]; then
+	if [ "$proto" != "none" -a -z "$nonat" -a -z "$zone" ]; then
 		iflist=$(util_uci get firewall.@zone[1].network|cut -d= -s -f2)
 		if ! echo "$iflist"|grep -qw $interface; then
 			echo set_list firewall.@zone[1].network=$iflist $interface >> $tmpfile
 			echo commit firewall >> $tmpfile
 		fi
+	elif [ "$zone" == "dbg" ]; then
+	## for alu remote debug , add dbg zone for ssh rule
+		dbgzone=$(ubus call uci get "{'config':'firewall' }"| jsonfilter -e "@.values[@.name='dbg']['name']")
+		if [ -z "$dbgzone" ]; then
+			echo add firewall zone >> $tmpfile
+			echo set firewall.@zone[-1].name=$zone >> $tmpfile
+			echo set firewall.@zone[-1].input=REJECT >> $tmpfile
+			echo set firewall.@zone[-1].output=ACCEPT >> $tmpfile
+			echo set firewall.@zone[-1].forward=REJECT >> $tmpfile
+			echo set firewall.@zone[-1].masq=1 >> $tmpfile
+			echo set firewall.@zone[-1].mtu_fix=1 >> $tmpfile
+			echo set_list firewall.@zone[-1].network=$interface >> $tmpfile
+			echo commit firewall >> $tmpfile
+		fi	
 	fi
 fi
 
