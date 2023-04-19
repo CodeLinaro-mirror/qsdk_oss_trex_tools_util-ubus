@@ -111,12 +111,24 @@ w_ntp_list() {
 	return 0
 }
 
+
+# $1: protocol_vlan uci section
+# $2: protocol_vlan uci option
+r_protocol_vlan_option() {
+	[ -z "$1" -o -z "$2" ] && return 1
+
+	local ret_val=`uci -q get protocol_vlan.$1.$2 | sed 's/^[ \t]*//g'`
+
+	echo -ne $ret_val
+	return 0
+}
+
 system_restart(){
 	/etc/init.d system restart
 }
 
 help_short() {
-	echo "r_omci|w_omci|r_omci_option|w_omci_option|r_omci_array_option|w_omci_array_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list"
+	echo "r_omci|w_omci|r_omci_option|w_omci_option|r_omci_array_option|w_omci_array_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list|r_protocol_vlan_option"
 }
 
 if [ -z "$1" ]; then
@@ -126,7 +138,7 @@ fi
 
 proto=$1
 case $proto in
-	r_omci|w_omci|r_omci_option|r_omci_array_option|w_omci_array_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list) ;;
+	r_omci|w_omci|r_omci_option|r_omci_array_option|w_omci_array_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list|r_protocol_vlan_option) ;;
 	*) help_short; exit 1;;
 esac
 
@@ -146,6 +158,7 @@ case $proto in
 	w_omci_option)		w_omci_option $2 $3 $4;;
 	r_omci_array_option)	r_omci_array_option $2 $3 $4;;
 	w_omci_array_option)	w_omci_array_option $2 $3 $4 $5;;
+	r_protocol_vlan_option)		r_protocol_vlan_option $2 $3;;
 	*)			add_none;;
 esac
 
