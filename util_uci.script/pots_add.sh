@@ -53,8 +53,7 @@ add_pots() {
 	[ -n "$tcpudp_protocol" ]		&& echo set pots.pots$pots_instance.tcpudp_protocol=$tcpudp_protocol >> $tmpfile
 	[ -n "$tcpudp_tos" ]			&& echo set pots.pots$pots_instance.tcpudp_tos=$tcpudp_tos >> $tmpfile
 	[ ! -z "$iphost_devname" ]		&& echo set pots.pots$pots_instance.iphost_devname=$iphost_devname >> $tmpfile
-	[ ! -z "$iphost_addr_static" ]		&& echo set pots.pots$pots_instance.iphost_addr_static=$iphost_addr_static >> $tmpfile
-	[ ! -z "$iphost_addr_dhcp" ]		&& echo set pots.pots$pots_instance.iphost_addr_dhcp=$iphost_addr_dhcp >> $tmpfile
+	[ ! -z "$iphost_addr" ]			&& echo set pots.pots$pots_instance.iphost_addr=$iphost_addr >> $tmpfile
 	[ -n "$dial_plan_table_max_size" ]	&& echo set pots.pots$pots_instance.dial_plan_table_max_size=$dial_plan_table_max_size >> $tmpfile
 	[ -n "$dial_critical_timeout" ]		&& echo set pots.pots$pots_instance.dial_critical_timeout=$dial_critical_timeout >> $tmpfile
 	[ -n "$dial_partial_timeout" ]		&& echo set pots.pots$pots_instance.dial_partial_timeout=$dial_partial_timeout >> $tmpfile

@@ -44,8 +44,7 @@ else
 			     -e tcpudp_protocol='@.values.tcpudp_protocol' \
 			     -e tcpudp_tos='@.values.tcpudp_tos' \
 			     -e iphost_devname='@.values.iphost_devname' \
-			     -e iphost_addr_static='@.values.iphost_addr_static' \
-			     -e iphost_addr_dhcp='@.values.iphost_addr_dhcp' \
+			     -e iphost_addr='@.values.iphost_addr' \
 			     -e dial_plan_table_max_size='@.values.dial_plan_table_max_size' \
 			     -e dial_critical_timeout='@.values.dial_critical_timeout' \
 			     -e dial_partial_timeout='@.values.dial_partial_timeout' \
