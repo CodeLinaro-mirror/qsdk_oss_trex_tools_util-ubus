@@ -53,28 +53,42 @@ for ifname in $iflist; do
 	[ "$ifname" != "lan" ] && echo del dhcp.$ifname >> $tmpfile
 done
 
-## del interface from firewall zone wan
-wanlist=$(util_uci get firewall.@zone[1].network|cut -d= -s -f2)
-for ifname in $iflist; do
-	wanlist2=$(remove_name_from_list $ifname $wanlist)
-	wanlist="$wanlist2"
-done
-if [ -n "$wanlist" ]; then
-	echo "set_list firewall.@zone[1].network=$wanlist" >> $tmpfile
+if [ -n "$zone" ]; then
+	found=-1
+	for i in $(seq 0 5); do 
+    	zonename=$(uci -q get firewall.@zone[$i].name) 
+    	if [ "$zone" == "$zonename" ]; then
+        	found=$i
+        	break
+    	fi
+	done
+	if [ $found -ge 0 ]; then
+		echo "del firewall.@zone[$found]" >> $tmpfile
+	fi
 else
-	echo "del firewall.@zone[1].network" >> $tmpfile
-fi
+	## del interface from firewall zone wan
+	wanlist=$(util_uci get firewall.@zone[1].network|cut -d= -s -f2)
+	for ifname in $iflist; do
+		wanlist2=$(remove_name_from_list $ifname $wanlist)
+		wanlist="$wanlist2"
+	done
+	if [ -n "$wanlist" ]; then
+		echo "set_list firewall.@zone[1].network=$wanlist" >> $tmpfile
+	else
+		echo "del firewall.@zone[1].network" >> $tmpfile
+	fi
 
-## del interface from firewall zone lan
-lanlist=$(util_uci get firewall.@zone[0].network|cut -d= -s -f2)
-for ifname in $iflist; do
-	lanlist2=$(remove_name_from_list $ifname $lanlist)
-	lanlist="$lanlist2"
-done
-if [ -n "$lanlist" ]; then
-	echo "set_list firewall.@zone[0].network=$lanlist" >> $tmpfile
-else
-	echo "del firewall.@zone[0].network" >> $tmpfile
+	## del interface from firewall zone lan
+	lanlist=$(util_uci get firewall.@zone[0].network|cut -d= -s -f2)
+	for ifname in $iflist; do
+		lanlist2=$(remove_name_from_list $ifname $lanlist)
+		lanlist="$lanlist2"
+	done
+	if [ -n "$lanlist" ]; then
+		echo "set_list firewall.@zone[0].network=$lanlist" >> $tmpfile
+	else
+		echo "del firewall.@zone[0].network" >> $tmpfile
+	fi
 fi
 
 echo commit firewall >> $tmpfile
