@@ -40,7 +40,6 @@ r_protocol_vlan_entry() {
 	ubus call uci get "{'config':'protocol_vlan' }" | jsonfilter \
 	-e "@.values.vlan$1.enable" \
 	-e "@.values.vlan$1.oui" \
-	-e "@.values.vlan$1.oui" \
 	-e "@.values.vlan$1.ethertype" \
 	-e "@.values.vlan$1.dmac" \
 	-e "@.values.vlan$1.dmac_prefix" \
