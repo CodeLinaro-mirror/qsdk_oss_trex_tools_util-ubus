@@ -1,9 +1,9 @@
 #!/bin/sh
 
 . /usr/share/libubox/jshn.sh
-. /usr/sbin/pots_status.sh
-if [ -f /usr/sbin/pots_status_calix.sh ]; then
-	. /usr/sbin/pots_status_calix.sh
+. /etc/pots/pots_status.sh
+if [ -f /etc/pots/pots_status_calix.sh ]; then
+	. /etc/pots/pots_status_calix.sh
 	support_proprietary="1"
 fi
 
