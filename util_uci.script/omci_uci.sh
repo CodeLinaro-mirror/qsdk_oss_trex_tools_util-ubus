@@ -105,18 +105,31 @@ w_ntp() {
 }
 
 w_ntp_list() {
-	[ -z "$1" -o -z "$2" ]&& return 1
-	
-	echo set_list system.ntp.$1=$2 >> $tmpfile
+	[ $# -le 2 ] && return 1
+
+	local p_cnt=$(($#-2))
+	#echo $# $p_cnt
+	#echo $2 $3
+	if [ "$p_cnt" = "1" ]; then
+			echo set_list system.ntp.$2=$3 >> $tmpfile
+	fi
+	if [ "$p_cnt" = "2" ]; then
+			echo set_list system.ntp.$2=$3 $4 >> $tmpfile
+	fi
+	if [ "$p_cnt" = "3" ]; then
+			echo set_list system.ntp.$2=$3 $4 $5 >> $tmpfile
+	fi
 	return 0
 }
 
 system_restart(){
-	/etc/init.d system restart
+	/etc/init.d/system restart
 }
-
+ntp_restart(){
+	/etc/init.d/sysntpd restart
+}
 help_short() {
-	echo "r_omci|w_omci|r_omci_option|w_omci_option|r_omci_array_option|w_omci_array_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list"
+	echo "r_omci|w_omci|r_omci_option|w_omci_option|r_omci_array_option|w_omci_array_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list|ntp_restart"
 }
 
 if [ -z "$1" ]; then
@@ -126,7 +139,7 @@ fi
 
 proto=$1
 case $proto in
-	r_omci|w_omci|r_omci_option|r_omci_array_option|w_omci_array_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list) ;;
+	r_omci|w_omci|r_omci_option|r_omci_array_option|w_omci_array_option|w_omci_option|r_system|w_system|w_ntp|r_ntp|sys_restart|w_ntp_list|ntp_restart) ;;
 	*) help_short; exit 1;;
 esac
 
@@ -140,8 +153,9 @@ case $proto in
 	w_system)		w_system $2 $3;;
 	w_ntp)			w_ntp $2 $3;;
 	r_ntp)			r_ntp $2;;
-	sys_restart)		system_restart;;
-	w_ntp_list)		w_ntp_list $2 $3;;
+	sys_restart)	system_restart;;
+	ntp_restart)	ntp_restart;;
+	w_ntp_list)		w_ntp_list $@;;
 	r_omci_option)		r_omci_option $2 $3;;
 	w_omci_option)		w_omci_option $2 $3 $4;;
 	r_omci_array_option)	r_omci_array_option $2 $3 $4;;
