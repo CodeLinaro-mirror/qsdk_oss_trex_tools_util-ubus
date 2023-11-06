@@ -191,18 +191,19 @@ uci_cmd_add(UCI_LINE * line)
 	return ret;
 }
 
+#define MAX_LIST_NUM 32
 int
 uci_cmd_setlist(UCI_LINE * line)
 {
 	int ret, cnt = 0;
 	char *strpt = NULL;
-	char *arr_value[16];
+	char *arr_value[MAX_LIST_NUM];
 
 	strpt = strtok(line->value, " ");
 	while (strpt != NULL) {
 		arr_value[cnt] = strpt;
 		cnt++;
-		if (cnt >= 16)
+		if (cnt >= MAX_LIST_NUM)
 			break;
 		strpt = strtok(NULL, " ");
 	}
@@ -242,7 +243,7 @@ uci_cmd_add_list(UCI_LINE * line)
 {
 	int ret, cnt = 0;
 	char buf[256];
-	char *arr_value[16], *strpt;
+	char *arr_value[MAX_LIST_NUM], *strpt;
 
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
 	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
@@ -253,11 +254,11 @@ uci_cmd_add_list(UCI_LINE * line)
 			return 0;
 		else
 			arr_value[cnt++] = strpt;
-		if (cnt >= 16)
+		if (cnt >= MAX_LIST_NUM)
 			break;
 		strpt = strtok(NULL, " ");
 	}
-	if (cnt < 16)
+	if (cnt < MAX_LIST_NUM)
 		arr_value[cnt++] = line->value;
 	else
 		return -1;
@@ -274,7 +275,7 @@ uci_cmd_del_list(UCI_LINE * line)
 {
 	int ret, i, match = 0, cnt = 0;
 	char buf[256];
-	char *arr_value[16], *strpt;
+	char *arr_value[MAX_LIST_NUM], *strpt;
 
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
 	dbprintf_wanif("ret=%d(%s)\nbuf=%s\n", ret, util_ubus_error_str(ret), buf);
@@ -282,7 +283,7 @@ uci_cmd_del_list(UCI_LINE * line)
 	strpt = strtok(buf, " ");
 	while (strpt != NULL) {
 		arr_value[cnt++] = strpt;
-		if (cnt >= 16)
+		if (cnt >= MAX_LIST_NUM)
 			break;
 		strpt = strtok(NULL, " ");
 	}
