@@ -24,6 +24,7 @@
 
 #include "util_ubus.h"
 
+#define UCI_GET_BUF	4096
 #define UCI_LINE_DEF
 #define dbprintf_wanif(fmt, args...)      do { if(dbg_level) fprintf(stderr,"%s:%d: %s(): " fmt, util_purename(__FILE__), __LINE__, __FUNCTION__, ##args); } while (0)
 
@@ -242,7 +243,7 @@ int
 uci_cmd_add_list(UCI_LINE * line)
 {
 	int ret, cnt = 0;
-	char buf[256];
+	char buf[UCI_GET_BUF];
 	char *arr_value[MAX_LIST_NUM], *strpt;
 
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
@@ -274,7 +275,7 @@ int
 uci_cmd_del_list(UCI_LINE * line)
 {
 	int ret, i, match = 0, cnt = 0;
-	char buf[256];
+	char buf[UCI_GET_BUF];
 	char *arr_value[MAX_LIST_NUM], *strpt;
 
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
@@ -307,7 +308,7 @@ int
 uci_cmd_get(UCI_LINE * line)
 {
 	int ret;
-	char buf[256];
+	char buf[UCI_GET_BUF];
 	char *name, *value;
 
 	ret = util_ubus_uci_get(line->package, line->section, line->option, buf, sizeof(buf) - 1);
