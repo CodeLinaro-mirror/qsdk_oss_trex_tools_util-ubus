@@ -510,7 +510,16 @@ main(int argc, char *argv[])
 			if (dbg_level)
 				uci_line_dump(&uci_line);
 			ret = uci_run(&uci_line);
-			dbprintf_wanif("ret=%d\n", ret);
+			dbprintf_wanif("uci_run ret=%d\n", ret);
+
+			if (uci_line.cmd_idx != UCI_CMD_GET ||
+				uci_line.cmd_idx != UCI_CMD_CHANGES ||
+				uci_line.cmd_idx != UCI_CMD_COMMIT ||
+				uci_line.cmd_idx != UCI_CMD_RESTART) {
+
+				ret = uci_cmd_commit(&uci_line);
+				dbprintf_wanif("uci_cmd_commit ret=%d\n", ret);
+			}
 			uci_line_init(&uci_line, 1);
 			free(line);
 			line = NULL;
