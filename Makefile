@@ -8,7 +8,7 @@ ifeq ($(OPENWRT_BUILD_PLATFORM),)
 	export STAGING_DIR
 
 	CC:=$(STAGING_DIR)/toolchain-aarch64_cortex-a53_gcc-5.2.0_musl-1.1.16/bin/aarch64-openwrt-linux-gcc
-	CFLAGS+=-Wall -I. -I$(STAGING_DIR)/target-aarch64_cortex-a53_musl-1.1.16/usr/include 
+	CFLAGS+=-Wall -Wdiscarded-qualifiers -I. -I$(STAGING_DIR)/target-aarch64_cortex-a53_musl-1.1.16/usr/include 
 	LIB=-L$(STAGING_DIR)/target-aarch64_cortex-a53_musl-1.1.16/usr/lib -lubox -lblobmsg_json -ljson-c -lubus 
 endif
 

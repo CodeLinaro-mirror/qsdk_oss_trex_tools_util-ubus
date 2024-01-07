@@ -453,10 +453,10 @@ main(int argc, char *argv[])
 	ssize_t lineSize = 0;
 	FILE *input = stdin;
 	UCI_LINE uci_line;
-	const char util_usr[]="trex", util_pwd[]="trex1001";
+	char util_usr[]="trex", util_pwd[]="trex1001";
 	const char *dbg_str = getenv("UTIL_DBG");
-	const char *usr_str = getenv("UTIL_USR");
-	const char *pwd_str = getenv("UTIL_PWD");
+	char *usr_str = getenv("UTIL_USR");
+	char *pwd_str = getenv("UTIL_PWD");
 
 	if (dbg_str) {
 		dbg_level = atoi(dbg_str);
