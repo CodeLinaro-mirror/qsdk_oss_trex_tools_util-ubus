@@ -154,7 +154,7 @@ static const struct blobmsg_policy
  session_login_reply_policy[__SESSION_LOGIN_MAX] = {
 	[SESSION_LOGIN_SID] = {.name = "ubus_rpc_session",.type = BLOBMSG_TYPE_STRING},
 	[SESSION_LOGIN_TIMEOUT] = {.name = "timeout",.type = BLOBMSG_TYPE_INT32},
-	[SESSION_LOGIN_EXPIRES] = {.name = "expires",.type = BLOBMSG_TYPE_INT32},
+	[SESSION_LOGIN_EXPIRES] = {.name = "expires",.type = BLOBMSG_TYPE_UNSPEC},
 	[SESSION_LOGIN_ACLS] = {.name = "acls",.type = BLOBMSG_TYPE_TABLE},
 	[SESSION_LOGIN_DATA] = {.name = "data",.type = BLOBMSG_TYPE_TABLE},
 };
