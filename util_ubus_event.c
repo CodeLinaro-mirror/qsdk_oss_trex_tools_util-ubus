@@ -324,6 +324,15 @@ ubus_get_objstr(struct blob_attr *msg, char *key, char *str, int strlen)
 	const char *strval;
 
 	jobj = json_tokener_parse(blobmsg_format_json(msg, true));
+	if(NULL == jobj){
+		dbprintf("parse error\n");
+		return -1;
+	}
+	if(!json_object_is_type(jobj, json_type_object)) {
+		json_object_put(jobj);
+		dbprintf("error json string\n");
+		return -1;
+	}
 	if (json_object_object_get_ex(jobj, key, &obj_key)) {
 		jtype = json_object_get_type(obj_key);
 		switch (jtype) {
@@ -334,11 +343,9 @@ ubus_get_objstr(struct blob_attr *msg, char *key, char *str, int strlen)
 			strncpy(str, strval, strlen);
 			break;
 		default:
-
 			ret = -1;
 			break;
 		}
-		json_object_put(obj_key);
 	} else
 		ret = -1;
 	json_object_put(jobj);
@@ -354,6 +361,15 @@ ubus_get_objint(struct blob_attr *msg, char *key, int *value)
 	json_object *obj_key;
 
 	jobj = json_tokener_parse(blobmsg_format_json(msg, true));
+	if(NULL == jobj){
+		dbprintf("parse error\n");
+		return -1;
+	}
+	if(!json_object_is_type(jobj, json_type_object)) {
+		json_object_put(jobj);
+		dbprintf("error json string\n");
+		return -1;
+	}
 	if (json_object_object_get_ex(jobj, key, &obj_key)) {
 		jtype = json_object_get_type(obj_key);
 		switch (jtype) {
@@ -365,7 +381,6 @@ ubus_get_objint(struct blob_attr *msg, char *key, int *value)
 			ret = -1;
 			break;
 		}
-		json_object_put(obj_key);
 	} else {
 		ret = -1;
 	}
@@ -388,11 +403,12 @@ ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
 	0}, run_cmd[1025] = {
 	0};
 
-	if (!msg)
+	if (!msg )
 		return;
 	str = blobmsg_format_json(msg, true);
 	dbprintf("{ \"%s\": %s }\n", type, str);
 	if (strncmp(type, UBUS_EVENT_CTL, strlen(UBUS_EVENT_CTL)) == 0) {
+		dbprintf("ubus ctl\n");
 		ubus_get_objint(msg, "set_delay", &timer_delay);
 		if (!ubus_get_objint(msg, "shutdown", &shutdown)) {
 			if (shutdown)
@@ -423,7 +439,18 @@ ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
 			cfg_dump = 0;
 		}
 	}
-
+	jobj = json_tokener_parse(str);
+	if(NULL == jobj){
+		dbprintf("parse error\n");
+		free(str);
+		return;
+	}
+	if(!json_object_is_type(jobj, json_type_object)) {
+		json_object_put(jobj);
+		dbprintf("error json string\n");
+		free(str);
+		return;
+	}
 	list_for_each_entry(event_head, &eventlist, event_head_node) {
 		if (strcmp(type, event_head->event_name) == 0) {
 			ubus_get_objstr(msg, "pre_param", pre_param, sizeof(pre_param) - 1);
@@ -432,15 +459,12 @@ ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
 				ubus_event_inst->cond_result = 0;
 				list_for_each_entry(cond_inst, &ubus_event_inst->cond_list, cond_node) {
 					cond_inst->ismatch = 0;
-					jobj = json_tokener_parse(str);
 					if (json_object_object_get_ex(jobj, cond_inst->cond_patten, &obj_key)) {
 						strval = json_object_get_string(obj_key);
 						if (strcmp(strval, cond_inst->cond_value) == 0) {
 							cond_inst->ismatch = 1;
 						}
-						json_object_put(obj_key);
 					}
-					json_object_put(jobj);
 				}
 				oper = 'S';
 				list_for_each_entry(cond_inst, &ubus_event_inst->cond_list, cond_node) {
@@ -470,6 +494,7 @@ ubus_probe_device_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
 			}
 		}
 	}
+	json_object_put(jobj);
 	free(str);
 }
 
