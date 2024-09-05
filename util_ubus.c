@@ -1,18 +1,18 @@
 /******************************************************************
  *
- * Copyright (C) 2022 Opticore Technologies, Inc.
- * All Rights Reserved.
+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
  *
- * This program is the proprietary software of Opticore Technologies
- * and/or its licensors, and only be used, duplicated, modified or
- * distributed under the authorized license from Opticore Technologies.
- *
- * ANY USE OF THE SOFTWARE OTHER THAN AS AUTHORIZED UNDER
- * THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
- *
- * Purpose : /etc/config mib access tool through ubus
- * Module  : util_ubus
- * File    : util_ubus.c
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  ******************************************************************/
 
