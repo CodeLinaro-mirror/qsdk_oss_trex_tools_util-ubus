@@ -55,6 +55,8 @@ enum uci_command {
 	UCI_CMD_CHANGES,
 	UCI_CMD_COMMIT,
 	UCI_CMD_RESTART,
+	UCI_CMD_RENEW,
+	UCI_CMD_RELOAD,
 	__UCI_CMD_MAX,
 	__UCI_CMD_LAST = __UCI_CMD_MAX - 1
 };
@@ -150,6 +152,8 @@ uci_line_parser(char *input_line, UCI_LINE * line)
 	case UCI_CMD_CHANGES:
 	case UCI_CMD_COMMIT:
 	case UCI_CMD_RESTART:
+	case UCI_CMD_RENEW:
+	case UCI_CMD_RELOAD:
 		pt = strtok(NULL, "\n");
 		break;
 	case UCI_CMD_SET:
@@ -373,6 +377,28 @@ uci_cmd_restart(UCI_LINE * line)
 	return ret;
 }
 
+int
+uci_cmd_renew(UCI_LINE * line)
+{
+	int ret=0;
+	char cmd[64] = { 0 };
+
+	if (line->package) {
+		snprintf(cmd, 63, "ubus call network.interface.%s renew", line->package);
+		ret = system(cmd);
+	}
+	return ret;
+}
+
+int
+uci_cmd_reload(UCI_LINE * line)
+{
+	int ret;
+
+	ret = system("/etc/init.d/network reload");
+	return ret;
+}
+
 typedef int uci_fn_t(UCI_LINE * line);
 typedef struct {
 	char *cmdName;
@@ -389,7 +415,9 @@ uci_dispatchTable uci_cmd_dispatch[] = {
 	[UCI_CMD_DELLIST] = {"del_list", uci_cmd_del_list},
 	[UCI_CMD_CHANGES] = {"changes", uci_cmd_changes},
 	[UCI_CMD_COMMIT] = {"commit", uci_cmd_commit},
-	[UCI_CMD_RESTART] = {"restart", uci_cmd_restart}
+	[UCI_CMD_RESTART] = {"restart", uci_cmd_restart},
+	[UCI_CMD_RENEW] = {"renew", uci_cmd_renew},
+	[UCI_CMD_RELOAD] = {"reload", uci_cmd_reload}
 };
 
 int numdispatch = sizeof(uci_cmd_dispatch) / sizeof(uci_cmd_dispatch[0]);
@@ -438,6 +466,8 @@ print_help(void)
 	       "changes  <config>\n"
 	       "commit  [<config>]\n"
 	       "restart [lan | wan]\n"
+	       "renew 	[lan | wan]\n"
+	       "reload\n"
 	       "\n"
 	       "ps: commit is required for write cmds, so -f or stdin should be used\n"
 	       "    setting env UTIL_DBG to 1 will enable debug msg in detail\n");
@@ -512,11 +542,12 @@ main(int argc, char *argv[])
 			ret = uci_run(&uci_line);
 			dbprintf_wanif("uci_run ret=%d\n", ret);
 
-			if (uci_line.cmd_idx != UCI_CMD_GET ||
-				uci_line.cmd_idx != UCI_CMD_CHANGES ||
-				uci_line.cmd_idx != UCI_CMD_COMMIT ||
-				uci_line.cmd_idx != UCI_CMD_RESTART) {
-
+			if (uci_line.cmd_idx != UCI_CMD_GET &&
+				uci_line.cmd_idx != UCI_CMD_CHANGES &&
+				uci_line.cmd_idx != UCI_CMD_COMMIT &&
+				uci_line.cmd_idx != UCI_CMD_RESTART &&
+				uci_line.cmd_idx != UCI_CMD_RENEW &&
+				uci_line.cmd_idx != UCI_CMD_RELOAD) {
 				ret = uci_cmd_commit(&uci_line);
 				dbprintf_wanif("uci_cmd_commit ret=%d\n", ret);
 			}
