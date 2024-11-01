@@ -15,16 +15,19 @@ endif
 #%.o : %.c
 #	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
-all: util_uci util_ubus_event
+all: util_uci util_ubus_event net_monitor
 
 util_uci: util_ubus.o util_uci.o
 	$(CC) $(CFLAGS) -o util_uci util_ubus.o util_uci.o $(LIB)
 
 util_ubus_event: util_ubus_event.o
 	$(CC) $(CFLAGS) -o util_ubus_event util_ubus_event.o $(LIB)
+	
+net_monitor: net_monitor.o
+	$(CC) $(CFLAGS) -o net_monitor net_monitor.o $(LIB)
 		
 clean:
-	@rm -f util_uci util_ubus_event ubus_even_list *.o 2>/dev/null
+	@rm -f util_uci util_ubus_event ubus_even_list net_monitor *.o 2>/dev/null
 
 dist: all
 	echo "scp util_uci"
