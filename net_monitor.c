@@ -40,7 +40,7 @@ SOFTWARE.
 #include <linux/route.h>
 #include <ifaddrs.h>
 
-#define BUFLEN 20480
+#define BUFLEN 2048
 #define MSGLEN 1024
 #define dbprintf(fmt, args...)      do { if(dbg_level) fprintf(stderr,"%s:%d: %s(): " fmt, __FILE__, __LINE__, __FUNCTION__, ##args); } while (0)
 
@@ -103,27 +103,28 @@ void print_ifaddrmsg(struct nlmsghdr *nh) {
 	int len;
 	struct rtattr *tb[IFA_MAX + 1];
 	struct ifaddrmsg *ifaddr;
-	char tmp[100];
-	char tmp_msg[MSGLEN];
+	char tmp[100]={0};
+	char tmp_msg[MSGLEN]={0};
+	char ifname[IFNAMSIZ]={0};
+
 	bzero(tb, sizeof(tb));
 	ifaddr = NLMSG_DATA(nh);
 	len = nh->nlmsg_len - NLMSG_SPACE(sizeof(*ifaddr));
 	parse_rtattr(tb, IFA_MAX, IFA_RTA(ifaddr), len);
-	char ifname[IFNAMSIZ];
-
 	if_indextoname(ifaddr->ifa_index, ifname);
 	if (nh->nlmsg_type == RTM_NEWADDR) {
-		if (tb[IFA_LABEL] != NULL) {
-			if (tb[IFA_ADDRESS] != NULL) {
-				inet_ntop(ifaddr->ifa_family,
-						RTA_DATA(tb[IFA_ADDRESS]), tmp,
-						sizeof(tmp));
-				//if(strcmp(eth, "eth0") == 0 ){
-				snprintf(tmp_msg, sizeof(tmp_msg), "type=NEWADDR ifname=%s ipaddr=%s",
-						ifname, tmp);
-				set_msg(tmp_msg);
-				//}
-			}
+		if (tb[IFA_LABEL] != NULL) { //IFA_LABEL attribute not aways support IPv6
+			dbprintf("tb[IFA_LABEL]=%s\n", RTA_DATA(tb[IFA_LABEL]));
+		}
+		if (tb[IFA_ADDRESS] != NULL) {
+			inet_ntop(ifaddr->ifa_family,
+					RTA_DATA(tb[IFA_ADDRESS]), tmp,
+					sizeof(tmp));
+			//if(strcmp(eth, "eth0") == 0 ){
+			snprintf(tmp_msg, sizeof(tmp_msg), "type=NEWADDR ifname=%s ipaddr=%s",
+					ifname, tmp);
+			set_msg(tmp_msg);
+			//}
 		}
 
 	} else {
@@ -168,27 +169,45 @@ void print_rtmsg(struct nlmsghdr *nh) {
 int main(int argc, char *argv[])  
 {  
 	int socket_fd;
-	int err = 0;
+	int i, err = 0;
 	fd_set rd_set;
 	struct timeval timeout;
 	int select_r;
 	int read_r;
 	struct sockaddr_nl sa;
 	struct nlmsghdr *nh;
-	int trigger=0;
 	int len = BUFLEN;
 	char buff[2048];
 	char script_path[256] = "/etc/omci/script/network/net_monitor_cb.sh";
 	const char *dbg_str = getenv("NET_MONITOR_DBG");
+	char cmd[1024], care_protocol=0;
+
 	if(dbg_str) {
     		dbg_level = atoi(dbg_str);
     		dbprintf("dbg_level=%d\n",dbg_level);
-
     	}
-	if(argc > 1) {
-		strlcpy(script_path,argv[1],sizeof(script_path));
+
+	/* Handling parameters */
+	for (i = 1; i < argc; i++) {
+		if (!strcmp(argv[i], "-f")) {
+			strlcpy(script_path,argv[i+1],sizeof(script_path));
+			dbprintf("script_path=%s\n",script_path);
+			i++;
+		} else if (!strcmp(argv[i], "-4")) {
+			care_protocol=1;	//IPv4 only
+			i++;
+		} else if (!strcmp(argv[i], "-6")) {
+			care_protocol=2;	//IPv6 only
+			i++;
+		} else {
+			printf("usage: %s [OPTION]...\n", argv[0]);
+			printf("-f	script path\n");
+			printf("-4	IPv4 only\n");
+			printf("-6	IPv6 only\n");
+			return -1;
+		}
 	}
-	dbprintf("script_path=%s\n",script_path);
+
 	signal(SIGINT, intHandler);
 
     socket_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
@@ -198,7 +217,14 @@ int main(int argc, char *argv[])
     bzero(&sa, sizeof(sa));  
     sa.nl_family = AF_NETLINK;  
     //sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV4_ROUTE | RTMGRP_IPV6_IFADDR | RTMGRP_IPV6_ROUTE;
-    sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
+    if (care_protocol == 1) {	//IPv4 only
+	    sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV4_IFADDR;
+    } else if ( care_protocol == 2) {	//IPv6 only
+	    sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
+    } else {	//Both IPv4/IPv6
+	    sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
+    }
+
     t_assert(!bind(socket_fd, (struct sockaddr *) &sa, sizeof(sa)));  
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;  
@@ -210,11 +236,12 @@ int main(int argc, char *argv[])
             perror("select");
         } else if (select_r > 0) {
             if (FD_ISSET(socket_fd, &rd_set)) {
-                read_r = read(socket_fd, buff, sizeof(buff));
-                trigger=1;
+                if ((read_r = read(socket_fd, buff, sizeof(buff))) < 0 ) {
+			continue;
+		}
                 timeout.tv_sec = 1;
         	timeout.tv_usec = 0;
-                for (nh = (struct nlmsghdr *) buff; NLMSG_OK(nh, read_r); nh = NLMSG_NEXT(nh, read_r)) {
+		for (nh = (struct nlmsghdr *) buff; NLMSG_OK(nh, read_r); nh = NLMSG_NEXT(nh, read_r)) {
                     switch (nh->nlmsg_type) {
                     default:
                         /*other*/
@@ -228,11 +255,19 @@ int main(int argc, char *argv[])
                     case RTM_DELLINK:
                     	dbprintf("nh->nlmsg_type = %s\n", (nh->nlmsg_type==RTM_NEWLINK)?"NEWLINK":"DELLINK");
                         print_ifinfomsg(nh);
+
+			snprintf(cmd,sizeof(cmd),"%s %s",trigger_msg,script_path);
+			dbprintf("cmd: %s\n",cmd);
+			system(cmd);
                         break;
                     case RTM_NEWADDR:
                     case RTM_DELADDR:
                     	dbprintf("nh->nlmsg_type = %s\n", (nh->nlmsg_type==RTM_NEWADDR)?"NEWADDR":"DELADDR");
-                        print_ifaddrmsg(nh);  
+                        print_ifaddrmsg(nh);
+
+			snprintf(cmd,sizeof(cmd),"%s %s",trigger_msg,script_path);
+			dbprintf("cmd: %s\n",cmd);
+			system(cmd);
                         break;
 #if 0
                     case RTM_NEWROUTE:
@@ -240,23 +275,11 @@ int main(int argc, char *argv[])
                         print_rtmsg(nh);
                         break;
 #endif
-                    }
+                    }	//end switch
   
-                }
+                }	//end for
             }
-        } else {
-        	if(trigger) {
-        		char cmd[1024];
-        		trigger=0;
-        		timeout.tv_sec = 5;
-        		timeout.tv_usec = 0;
-        		snprintf(cmd,sizeof(cmd),"%s %s",trigger_msg,script_path);
-        		dbprintf("cmd: %s\n",cmd);
-        		system(cmd);
-
-        		
-        	}
-        }  
+        }
     }
     close(socket_fd);  
   
